@@ -263,7 +263,7 @@
         });*/
 
         // Створюємо шаблони, якщо вони не існують
-       /* if (!Lampa.Template.get('online_mod')) {
+        if (!Lampa.Template.get('online_mod')) {
             Lampa.Template.add('online_mod', `
                 <div class="online selector">
                     <div class="online__body">
@@ -272,7 +272,7 @@
                     </div>
                 </div>
             `);
-        }*/
+        }
         console.log('plugin is start')
     }
 
