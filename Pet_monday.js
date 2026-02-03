@@ -79,7 +79,7 @@
         };
 
         // Логіка балансера для uakino.best
-        function uakino(component, _object) {
+        /*function uakino(component, _object) {
             var network = new Lampa.Reguest();
             var object = _object;
             var HOST = 'https://uakino.best';
@@ -239,7 +239,7 @@
                 component.loading(false);
                 component.start(true);
             }
-        }
+        }*/
 
         // Додаємо кнопку "Онлайн" до карток фільмів
         Lampa.Listener.follow('full', function (e) {
