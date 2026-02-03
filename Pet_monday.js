@@ -251,7 +251,7 @@
                     </div>`);
 
                 btn.on('hover:enter', function () {
-                    log('push btn')
+                    console.log('push btn')
                     Lampa.Activity.push({
                         url: '',
                         title: 'Uakino',
