@@ -8,7 +8,7 @@
     // Функція для запуску плагіна
     function startPlugin() {
         // Реєструємо компонент в Lampa
-       /* window.uakino_component = function(object) {
+        window.uakino_component = function(object) {
             var network = new Lampa.Reguest();
             var scroll = new Lampa.Scroll({ mask: true, over: true });
             var files = new Lampa.Explorer(object);
@@ -76,10 +76,10 @@
                 scroll.destroy();
                 source.destroy();
             };
-        };*/
+        };
 
         // Логіка балансера для uakino.best
-        /*function uakino(component, _object) {
+        function uakino(component, _object) {
             var network = new Lampa.Reguest();
             var object = _object;
             var HOST = 'https://uakino.best';
@@ -239,7 +239,7 @@
                 component.loading(false);
                 component.start(true);
             }
-        }*/
+        }
 
         // Додаємо кнопку "Онлайн" до карток фільмів
         Lampa.Listener.follow('full', function (e) {
@@ -250,14 +250,14 @@
                         <span>Uakino</span>
                     </div>`);
 
-              /*  btn.on('hover:enter', function () {
+                btn.on('hover:enter', function () {
                     Lampa.Activity.push({
                         url: '',
                         title: 'Uakino',
                         component: 'uakino_component',
                         movie: e.data.movie,
                     });
-                });*/
+                });
                 e.object.activity.render().find('.view--torrent').after(btn);
             }
         });
