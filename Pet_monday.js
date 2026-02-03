@@ -242,7 +242,7 @@
         }*/
 
         // Додаємо кнопку "Онлайн" до карток фільмів
-        Lampa.Listener.follow('full', function (e) {
+       /* Lampa.Listener.follow('full', function (e) {
             if (e.type == 'complite') {
                 var btn = $(`
                     <div class="full-start__button selector view--online">
@@ -250,20 +250,20 @@
                         <span>Uakino</span>
                     </div>`);
 
-               /* btn.on('hover:enter', function () {
+                btn.on('hover:enter', function () {
                     Lampa.Activity.push({
                         url: '',
                         title: 'Uakino',
                         component: 'uakino_component',
                         movie: e.data.movie,
                     });
-                });*/
+                });
                 e.object.activity.render().find('.view--torrent').after(btn);
             }
-        });
+        });*/
 
         // Створюємо шаблони, якщо вони не існують
-        if (!Lampa.Template.get('online_mod')) {
+       /* if (!Lampa.Template.get('online_mod')) {
             Lampa.Template.add('online_mod', `
                 <div class="online selector">
                     <div class="online__body">
@@ -272,7 +272,8 @@
                     </div>
                 </div>
             `);
-        }
+        }*/
+        console.log('plugin is start')
     }
 
     // Запускаємо плагін
