@@ -207,6 +207,7 @@
 
             // Відображення списку серій/фільму в інтерфейсі Lampa
             function append(items) {
+                console.log('append')
                 component.reset();
                 items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
