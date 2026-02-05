@@ -133,6 +133,7 @@
 
             // Крок 2: Отримання сторінки фільму/серіалу для пошуку плеєра
             function getPage(movieUrl) {
+                var items = [];
                 var episode_links = [
                     {
                         title: 'test 1',
