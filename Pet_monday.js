@@ -9,6 +9,7 @@
     function startPlugin() {
         // Реєструємо компонент в Lampa
         window.uakino_component = function(object) {
+            console.log('component')
             var network = new Lampa.Reguest();
             var scroll = new Lampa.Scroll({ mask: true, over: true });
             var files = new Lampa.Explorer(object);
@@ -16,7 +17,7 @@
             // Створюємо екземпляр нашого балансера
             var source = new uakino(this, object);
             var last;
-            console.log('component')
+
             this.create = function () {
                 this.activity.loader(true);
                 files.appendFiles(scroll.render());
