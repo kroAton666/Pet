@@ -97,7 +97,7 @@
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
 
-                network.post(SEARCH_API, post_data, (search_html) => {
+                /*network.post(SEARCH_API, post_data, (search_html) => {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(search_html, "text/html");
                     var results = doc.querySelectorAll('a.sres-url');
@@ -127,7 +127,7 @@
                     }
                 }, (a, c) => {
                     component.empty('Помилка пошуку. ' + network.errorDecode(a,c));
-                });
+                });*/
             };
 
             // Крок 2: Отримання сторінки фільму/серіалу для пошуку плеєра
