@@ -19,10 +19,13 @@
             var last;
 
             this.create = function () {
-                this.activity.loader(true);
-                files.appendFiles(scroll.render());
-                this.search(); // Запускаємо пошук
-                return this.render();
+                console.log('uakino_component: Метод create() розпочато.');
+                try {
+                    // Повертаємо порожній рендер, щоб Lampa просто створила активність
+                    return this.render();
+                } catch (e) {
+                    console.error("uakino_component: Помилка в методі create():", e);
+                }
             };
 
             this.search = function () {
