@@ -16,7 +16,7 @@
             // Створюємо екземпляр нашого балансера
             var source = new uakino(this, object);
             var last;
-
+            console.log('component')
             this.create = function () {
                 this.activity.loader(true);
                 files.appendFiles(scroll.render());
@@ -93,7 +93,6 @@
 
             // Крок 1: Пошук фільму на сайті
             this.search = function (title, original_title) {
-                console.log('search')
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
 
