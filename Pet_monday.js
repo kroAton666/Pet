@@ -96,6 +96,7 @@
             this.search = function (title, original_title) {
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
+                getPage('kkkk')
 
                 /*network.post(SEARCH_API, post_data, (search_html) => {
                     var parser = new DOMParser();
@@ -132,7 +133,34 @@
 
             // Крок 2: Отримання сторінки фільму/серіалу для пошуку плеєра
             function getPage(movieUrl) {
-                network.get(movieUrl, (page_html) => {
+                var episode_links = [
+                    {
+                        title: 'test 1',
+                        episode: 0,
+                        iframeSrc: 'https://ashdi.vip/video03/3/serials/blue_lock/sinya_vyazniczya__01_76952/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                    },
+                    {
+                        title: 'test 2',
+                        episode: 0,
+                        iframeSrc: 'https://ashdi.vip/video05/2/serials/blue_lock/bl2_02online_146444/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                    }
+                ]//doc.querySelectorAll('.serial-series-box > li > a');
+
+                if (episode_links.length > 0) { // Це серіал
+                    episode_links.forEach((link, index) => {
+                        items.push({
+                            title: link.title, //link.textContent.trim(),
+                            episode: index + 1,
+                            iframeSrc: link.iframeSrc //link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
+                        });
+                    });
+                }
+                if (items.length > 0) {
+                    append(items);
+                } else {
+                    component.empty('Плеєр не знайдено на сторінці.');
+                }
+               /* network.get(movieUrl, (page_html) => {
                     var items = [];
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(page_html, "text/html");
@@ -159,7 +187,7 @@
                                 iframeSrc: link.iframeSrc //link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
                             });
                         });
-                    } /*else { // Це фільм
+                    } /!*else { // Це фільм
                         var iframe = doc.querySelector('iframe#playerfr');
                         if (iframe) {
                             items.push({
@@ -168,7 +196,7 @@
                                 iframeSrc: iframe.src
                             });
                         }
-                    }*/
+                    }*!/
 
                     if (items.length > 0) {
                         append(items);
@@ -177,7 +205,7 @@
                     }
                 }, (a, c) => {
                     component.empty('Не вдалося завантажити сторінку фільму.');
-                });
+                });*/
             }
 
             // Крок 3: Отримання фінального посилання на потік
