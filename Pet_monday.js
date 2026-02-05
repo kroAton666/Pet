@@ -50,9 +50,10 @@
                     back: this.back
                 });
                 Lampa.Controller.toggle('content');
-                console.log('start end')
+
                 // Запускаємо пошук даних
                 this.search();
+                console.log('start end')
             };
             this.search = function () {
                 this.activity.loader(true);
