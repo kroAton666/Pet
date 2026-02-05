@@ -8,8 +8,8 @@
     // Функція для запуску плагіна
     function startPlugin() {
         // Реєструємо компонент в Lampa
-        window.uakino_component = function(object) {
-            console.log('component')
+        Lampa.Component.add('uakino_component', function(object) {
+            console.log('uakino_component: Компонент успішно запущено!');
             var network = new Lampa.Reguest();
             var scroll = new Lampa.Scroll({ mask: true, over: true });
             var files = new Lampa.Explorer(object);
@@ -77,7 +77,7 @@
                 scroll.destroy();
                 source.destroy();
             };
-        };
+        });
 
         // Логіка балансера для uakino.best
         function uakino(component, _object) {
