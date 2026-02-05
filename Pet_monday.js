@@ -275,7 +275,6 @@
                         title: element.title,
                         quality: 'HD' // Можна залишити статично, бо якість невідома
                     });
-                    console.log('append cal')
                     item.on('hover:enter', () => {
                         element.loading = true;
                         getStream(element, () => {
@@ -307,6 +306,7 @@
                             Lampa.Player.playlist(playlist);
                         });
                     });
+                    console.log('append cal')
                     component.append(item);
                 });
                 component.loading(false);
