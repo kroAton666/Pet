@@ -221,7 +221,7 @@
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(player_html, "text/html");
                     var video_tag = doc.querySelector('video');
-
+                    console.log('get stream')
                     if (video_tag && video_tag.src) {
                         element.stream = video_tag.src;
                         callback();
@@ -237,7 +237,6 @@
 
             // Відображення списку серій/фільму в інтерфейсі Lampa
             function append(items) {
-                console.log('append')
                 component.reset();
                 items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
