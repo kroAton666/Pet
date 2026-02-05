@@ -185,9 +185,9 @@
                         });
                     });
                 }
-                console.log('search this')
                 if (items.length > 0) {
                     append(items);
+                    console.log('search this')
                 } else {
                     component.empty('Плеєр не знайдено на сторінці.');
                 }
@@ -268,6 +268,7 @@
 
             // Відображення списку серій/фільму в інтерфейсі Lampa
             function append(items) {
+                console.log('append uyuy')
                 component.reset();
                 items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
