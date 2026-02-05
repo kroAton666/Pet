@@ -137,17 +137,28 @@
                     var doc = parser.parseFromString(page_html, "text/html");
 
                     // Перевіряємо, чи це серіал (чи є вибір серій)
-                    var episode_links = doc.querySelectorAll('.serial-series-box > li > a');
+                    var episode_links = [
+                        {
+                            title: 'test 1',
+                            episode: 0,
+                            iframeSrc: 'https://ashdi.vip/video03/3/serials/blue_lock/sinya_vyazniczya__01_76952/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                        },
+                        {
+                            title: 'test 2',
+                            episode: 0,
+                            iframeSrc: 'https://ashdi.vip/video05/2/serials/blue_lock/bl2_02online_146444/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                        }
+                    ]//doc.querySelectorAll('.serial-series-box > li > a');
 
                     if (episode_links.length > 0) { // Це серіал
                         episode_links.forEach((link, index) => {
                             items.push({
-                                title: link.textContent.trim(),
+                                title: link.title, //link.textContent.trim(),
                                 episode: index + 1,
-                                iframeSrc: link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
+                                iframeSrc: link.iframeSrc //link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
                             });
                         });
-                    } else { // Це фільм
+                    } /*else { // Це фільм
                         var iframe = doc.querySelector('iframe#playerfr');
                         if (iframe) {
                             items.push({
@@ -156,7 +167,7 @@
                                 iframeSrc: iframe.src
                             });
                         }
-                    }
+                    }*/
 
                     if (items.length > 0) {
                         append(items);
