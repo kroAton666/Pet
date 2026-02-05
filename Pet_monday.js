@@ -268,46 +268,46 @@
 
             // Відображення списку серій/фільму в інтерфейсі Lampa
             function append(items) {
+                console.log('append cal')
                 component.reset();
                 items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
                         title: element.title,
                         quality: 'HD' // Можна залишити статично, бо якість невідома
                     });
-
-                    // item.on('hover:enter', () => {
-                    //     element.loading = true;
-                    //     getStream(element, () => {
-                    //         element.loading = false;
-                    //
-                    //         var playlist = [];
-                    //         var first = {
-                    //             url: element.stream,
-                    //             title: element.title
-                    //         };
-                    //
-                    //         // Якщо це серіал, створюємо плейлист
-                    //         if(items.length > 1){
-                    //             items.forEach(elem => {
-                    //                 var cell = {
-                    //                     title: elem.title,
-                    //                     url: (call) => {
-                    //                         getStream(elem, () => call(elem.stream));
-                    //                     }
-                    //                 };
-                    //                 if(elem === element) playlist.unshift(cell);
-                    //                 else playlist.push(cell);
-                    //             });
-                    //         } else {
-                    //             playlist.push(first);
-                    //         }
-                    //
-                    //         Lampa.Player.play(first);
-                    //         Lampa.Player.playlist(playlist);
-                    //     });
-                    // });
-                    component.append(item);
                     console.log('append cal')
+                    item.on('hover:enter', () => {
+                        element.loading = true;
+                        getStream(element, () => {
+                            element.loading = false;
+
+                            var playlist = [];
+                            var first = {
+                                url: element.stream,
+                                title: element.title
+                            };
+
+                            // Якщо це серіал, створюємо плейлист
+                            if(items.length > 1){
+                                items.forEach(elem => {
+                                    var cell = {
+                                        title: elem.title,
+                                        url: (call) => {
+                                            getStream(elem, () => call(elem.stream));
+                                        }
+                                    };
+                                    if(elem === element) playlist.unshift(cell);
+                                    else playlist.push(cell);
+                                });
+                            } else {
+                                playlist.push(first);
+                            }
+
+                            Lampa.Player.play(first);
+                            Lampa.Player.playlist(playlist);
+                        });
+                    });
+                    component.append(item);
                 });
                 component.loading(false);
                 component.start(true);
