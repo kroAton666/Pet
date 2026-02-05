@@ -50,7 +50,7 @@
                     back: this.back
                 });
                 Lampa.Controller.toggle('content');
-
+                console.log('start end')
                 // Запускаємо пошук даних
                 this.search();
             };
