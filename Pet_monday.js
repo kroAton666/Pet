@@ -53,7 +53,6 @@
 
                 // Запускаємо пошук даних
                 this.search();
-                console.log('start end')
             };
             this.search = function () {
                 this.activity.loader(true);
@@ -127,7 +126,7 @@
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
                 getPage('kkkk')
-
+                console.log('search this')
                 /*network.post(SEARCH_API, post_data, (search_html) => {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(search_html, "text/html");
