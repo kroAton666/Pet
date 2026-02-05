@@ -27,7 +27,33 @@
                     console.error("uakino_component: Помилка в методі create():", e);
                 }
             };
+            this.start = function () {
+                console.log('uakino_component: Метод start() розпочато.');
 
+                // Показуємо іконку завантаження
+                this.activity.loader(true);
+
+                // Додаємо область для скролу в наш контейнер
+                files.appendFiles(scroll.render());
+
+                // Налаштовуємо навігацію кнопками
+                Lampa.Controller.add('content', {
+                    toggle: () => {
+                        Lampa.Controller.collectionSet(scroll.render(), files.render());
+                        Lampa.Controller.collectionFocus(last || false, scroll.render());
+                    },
+                    up: () => {
+                        if (Navigator.canmove('up')) Navigator.move('up');
+                        else Lampa.Controller.toggle('head');
+                    },
+                    down: () => Navigator.move('down'),
+                    back: this.back
+                });
+                Lampa.Controller.toggle('content');
+
+                // Запускаємо пошук даних
+                this.search();
+            };
             this.search = function () {
                 this.activity.loader(true);
                 this.reset();
@@ -58,7 +84,7 @@
             this.render = function() {
                 return files.render();
             };
-            this.start = function(first_select) {
+            /*this.start = function(first_select) {
                 if (first_select) {
                     last = scroll.render().find('.selector').eq(0)[0];
                 }
@@ -72,7 +98,7 @@
                     back: this.back
                 });
                 Lampa.Controller.toggle('content');
-            };
+            };*/
             this.back = function() { Lampa.Activity.backward(); };
             this.destroy = function () {
                 network.clear();
