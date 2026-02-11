@@ -327,7 +327,7 @@
                     console.log('push btn')
                     Lampa.Activity.push({
                         url: '',
-                        title: 'Uakino',
+                        title: 'Привіт Руслан',
                         component: 'uakino_component',
                         movie: e.data.movie,
                     });
