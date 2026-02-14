@@ -8,8 +8,8 @@
     // Функція для запуску плагіна
     function startPlugin() {
         // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
-        if (!Lampa.Template.get('online_mod')) {
-            Lampa.Template.add('online_mod', `
+        if (!Lampa.Template.get('uakino_mod')) {
+            Lampa.Template.add('uakino_mod', `
                 <div class="online selector">
                     <div class="online__body">
                         <div class="online__title" style="padding-left: 1.5em;">{title}</div>
@@ -17,7 +17,7 @@
                     </div>
                 </div>
             `);
-            console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'online_mod' успішно додано.");
+            console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'uakino_mod' успішно додано.");
         }
 
         // Реєструємо компонент в Lampa
@@ -36,14 +36,14 @@
                 // Очищуємо попередні результати
                 scroll.clear();
                 // FIX 2: Додаємо перевірку наявності шаблону прямо перед використанням.
-                if (!Lampa.Template.get('online_mod')) {
-                    this.empty("Помилка: Шаблон 'online_mod' не знайдено. Плагін не може відобразити список.");
-                    console.error("КРИТИЧНА ПОМИЛКА: Шаблон 'online_mod' відсутній під час рендерингу!");
+                if (!Lampa.Template.get('uakino_mod')) {
+                    this.empty("Помилка: Шаблон 'uakino_mod' не знайдено. Плагін не може відобразити список.");
+                    console.error("КРИТИЧНА ПОМИЛКА: Шаблон 'uakino_mod' відсутній під час рендерингу!");
                     return; // Зупиняємо виконання, щоб уникнути помилки
                 }
 
                 items.forEach(element => {
-                    var item = Lampa.Template.get('online_mod', {
+                    var item = Lampa.Template.get('uakino_mod', {
                         title: element.title,
                         quality: 'HD'
                     });
