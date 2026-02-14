@@ -5,10 +5,11 @@
 (function () {
     'use strict';
 
-    // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
-    if (!Lampa.Template.get('online_mod')) {
-        console.log('try add template')
-        Lampa.Template.add('online_mod', `
+    // Функція для запуску плагіна
+    function startPlugin() {
+        // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
+        if (!Lampa.Template.get('online_mod')) {
+            Lampa.Template.add('online_mod', `
                 <div class="online selector">
                     <div class="online__body">
                         <div class="online__title" style="padding-left: 1.5em;">{title}</div>
@@ -16,11 +17,9 @@
                     </div>
                 </div>
             `);
-        console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'online_mod' успішно додано.");
-    }
+            console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'online_mod' успішно додано.");
+        }
 
-    // Функція для запуску плагіна
-    function startPlugin() {
         // Реєструємо компонент в Lampa
         Lampa.Component.add('uakino_component', function(object) {
             var network = new Lampa.Reguest();
