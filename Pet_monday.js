@@ -101,14 +101,14 @@
 
             this.start = function () {
                 started = true; // Встановлюємо прапорець
-                 this.setFocus(); // Налаштовуємо фокус і контролер
-                //this.search();   // Запускаємо початковий пошук
+                this.setFocus(); // Налаштовуємо фокус і контролер
+                this.search();   // Запускаємо початковий пошук
             };
 
             this.search = function () {
                 this.loading(true);
                 this.reset();
-                source.search(object.movie.title, object.movie.original_title);
+                //source.search(object.movie.title, object.movie.original_title);
             };
 
             // Допоміжні функції для взаємодії з інтерфейсом Lampa
