@@ -5,6 +5,19 @@
 (function () {
     'use strict';
 
+    // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
+    if (!Lampa.Template.get('online_mod')) {
+        Lampa.Template.add('online_mod', `
+                <div class="online selector">
+                    <div class="online__body">
+                        <div class="online__title" style="padding-left: 1.5em;">{title}</div>
+                        <div class="online__quality" style="padding-left: 1.5em;">{quality}</div>
+                    </div>
+                </div>
+            `);
+        console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'online_mod' успішно додано.");
+    }
+
     // Функція для запуску плагіна
     function startPlugin() {
         // Реєструємо компонент в Lampa
@@ -22,15 +35,11 @@
 
                 // Очищуємо попередні результати
                 scroll.clear();
+                // FIX 2: Додаємо перевірку наявності шаблону прямо перед використанням.
                 if (!Lampa.Template.get('online_mod')) {
-                    Lampa.Template.add('online_mod', `
-                <div class="online selector">
-                    <div class="online__body">
-                        <div class="online__title">{title}</div>
-                        <div class="online__quality">{quality}</div>
-                    </div>
-                </div>
-            `);
+                    this.empty("Помилка: Шаблон 'online_mod' не знайдено. Плагін не може відобразити список.");
+                    console.error("КРИТИЧНА ПОМИЛКА: Шаблон 'online_mod' відсутній під час рендерингу!");
+                    return; // Зупиняємо виконання, щоб уникнути помилки
                 }
 
                 items.forEach(element => {
