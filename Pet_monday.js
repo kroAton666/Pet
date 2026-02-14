@@ -108,7 +108,7 @@
             this.search = function () {
                 this.loading(true);
                 this.reset();
-                //source.search(object.movie.title, object.movie.original_title);
+                source.search(object.movie.title, object.movie.original_title);
             };
 
             // Допоміжні функції для взаємодії з інтерфейсом Lampa
@@ -185,6 +185,7 @@
                 } else {
                     this.onEmpty('Плеєр не знайдено на сторінці.');
                 }
+                console.log('get page finish')
             }
 
             this.getStream = function(element, callback) {
