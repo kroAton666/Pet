@@ -102,7 +102,7 @@
             this.start = function () {
                 started = true; // Встановлюємо прапорець
                 // this.setFocus(); // Налаштовуємо фокус і контролер
-                this.search();   // Запускаємо початковий пошук
+                //this.search();   // Запускаємо початковий пошук
             };
 
             this.search = function () {
