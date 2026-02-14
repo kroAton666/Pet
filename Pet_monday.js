@@ -22,6 +22,16 @@
 
                 // Очищуємо попередні результати
                 scroll.clear();
+                if (!Lampa.Template.get('online_mod')) {
+                    Lampa.Template.add('online_mod', `
+                <div class="online selector">
+                    <div class="online__body">
+                        <div class="online__title">{title}</div>
+                        <div class="online__quality">{quality}</div>
+                    </div>
+                </div>
+            `);
+                }
 
                 items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
@@ -240,16 +250,7 @@
         });
 
         //Створюємо шаблони, якщо вони не існують
-        if (!Lampa.Template.get('online_mod')) {
-            Lampa.Template.add('online_mod', `
-                <div class="online selector">
-                    <div class="online__body">
-                        <div class="online__title">{title}</div>
-                        <div class="online__quality">{quality}</div>
-                    </div>
-                </div>
-            `);
-        }
+
         console.log('plugin is start', Lampa)
     }
 
