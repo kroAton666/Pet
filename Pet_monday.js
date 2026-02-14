@@ -14,6 +14,7 @@
             var files = new Lampa.Explorer(object);
             var source = new uakino(this, object);
             var last;
+            var started = false; // Прапорець, щоб знати, чи компонент вже стартував
 
             // Метод для відображення даних, які поверне балансер
             function renderItems(items) {
@@ -68,11 +69,28 @@
 
                 // Після того, як все додали, вимикаємо завантажувач і показуємо контент
                 this.loading(false);
-                this.start(true);
-            }
 
+                // FIX: Після рендерингу, якщо компонент вже стартував, просто встановлюємо фокус.
+                // Якщо ще ні - це означає, що це перший рендер, і start ще не викликався.
+                if (started) {
+                    this.setFocus();
+                }
+            };
+
+            this.setFocus = function() {
+                last = scroll.render().find('.selector').eq(0)[0];
+                Lampa.Controller.add('content', {
+                    toggle: () => {
+                        Lampa.Controller.collectionSet(scroll.render(), files.render());
+                        Lampa.Controller.collectionFocus(last || false, scroll.render());
+                    },
+                    up: () => (Navigator.canmove('up')) ? Navigator.move('up') : Lampa.Controller.toggle('head'),
+                    down: () => Navigator.move('down'),
+                    back: this.back.bind(this) // FIX: Прив'язуємо контекст для 'back'
+                });
+                Lampa.Controller.toggle('content');
+            };
             this.create = function () {
-                // Передаємо функцію renderItems в балансер, щоб він міг повернути дані
                 source.onResults = renderItems.bind(this);
                 source.onEmpty = this.empty.bind(this);
                 source.onLoading = this.loading.bind(this);
@@ -82,21 +100,9 @@
             };
 
             this.start = function () {
-                Lampa.Controller.add('content', {
-                    toggle: () => {
-                        Lampa.Controller.collectionSet(scroll.render(), files.render());
-                        Lampa.Controller.collectionFocus(last || false, scroll.render());
-                    },
-                    up: () => {
-                        if (Navigator.canmove('up')) Navigator.move('up');
-                        else Lampa.Controller.toggle('head');
-                    },
-                    down: () => Navigator.move('down'),
-                    back: this.back
-                });
-                Lampa.Controller.toggle('content');
-
-                this.search();
+                started = true; // Встановлюємо прапорець
+                this.setFocus(); // Налаштовуємо фокус і контролер
+                this.search();   // Запускаємо початковий пошук
             };
 
             this.search = function () {
