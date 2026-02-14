@@ -23,13 +23,13 @@
                 // Очищуємо попередні результати
                 scroll.clear();
 
-                /*items.forEach(element => {
+                items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
                         title: element.title,
                         quality: 'HD'
                     });
 
-                    item.on('hover:enter', () => {
+                   /* item.on('hover:enter', () => {
                         source.getStream(element, (streamUrl) => {
                             if (streamUrl) {
                                 var playlist = [];
@@ -64,8 +64,8 @@
                         last = e.target;
                         scroll.update($(e.target), true);
                     });
-                    scroll.append(item);
-                });*/
+                    scroll.append(item);*/
+                });
 
                 // Після того, як все додали, вимикаємо завантажувач і показуємо контент
                 this.loading(false);
