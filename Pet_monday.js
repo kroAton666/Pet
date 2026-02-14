@@ -157,7 +157,6 @@
         function uakino(component, _object) {
             var network = new Lampa.Reguest();
 
-            // Ці функції будуть передані з головного компонента
             this.onResults = function(items) {};
             this.onEmpty = function(msg) {};
             this.onLoading = function(bool) {};
@@ -165,33 +164,23 @@
             this.destroy = function () { network.clear(); };
 
             this.search = function (title, original_title) {
-                // Тепер getPage просто повертає дані через колбек onResults
-                getPage('kkkk');
+                this.getPage('kkkk');
             };
 
-            function getPage(movieUrl) {
+            // FIX: Зробив getPage методом екземпляра
+            this.getPage = function(movieUrl) {
                 var items = [
-                    {
-                        title: 'Тестова серія 1',
-                        episode: 1,
-                        iframeSrc: '//ashdi.vip/vod/145231?'
-                    },
-                    {
-                        title: 'Тестова серія 2',
-                        episode: 2,
-                        iframeSrc: '//ashdi.vip/vod/146444?'
-                    }
+                    { title: 'Тестова серія 1', episode: 1, iframeSrc: '//ashdi.vip/vod/145231?' },
+                    { title: 'Тестова серія 2', episode: 2, iframeSrc: '//ashdi.vip/vod/146444?' }
                 ];
 
                 if (items.length > 0) {
-                    // Повертаємо результат в головний компонент
                     this.onResults(items);
                 } else {
                     this.onEmpty('Плеєр не знайдено на сторінці.');
                 }
             }
 
-            // Перейменовуємо getStream, щоб уникнути плутанини
             this.getStream = function(element, callback) {
                 if (element.stream) return callback(element.stream);
 
@@ -199,11 +188,11 @@
                 var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
 
                 network.get(iframeUrl, (player_html) => {
+                    this.onLoading(false);
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(player_html, "text/html");
                     var video_tag = doc.querySelector('video');
 
-                    this.onLoading(false);
                     if (video_tag && video_tag.src) {
                         element.stream = video_tag.src;
                         callback(element.stream);
