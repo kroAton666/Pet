@@ -23,7 +23,7 @@
                 // Очищуємо попередні результати
                 scroll.clear();
 
-                items.forEach(element => {
+                /*items.forEach(element => {
                     var item = Lampa.Template.get('online_mod', {
                         title: element.title,
                         quality: 'HD'
@@ -65,7 +65,7 @@
                         scroll.update($(e.target), true);
                     });
                     scroll.append(item);
-                });
+                });*/
 
                 // Після того, як все додали, вимикаємо завантажувач і показуємо контент
                 this.loading(false);
