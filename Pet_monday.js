@@ -9,34 +9,79 @@
     function startPlugin() {
         // Реєструємо компонент в Lampa
         Lampa.Component.add('uakino_component', function(object) {
-            console.log('uakino_component: Компонент успішно запущено!');
             var network = new Lampa.Reguest();
             var scroll = new Lampa.Scroll({ mask: true, over: true });
             var files = new Lampa.Explorer(object);
-
-            // Створюємо екземпляр нашого балансера
             var source = new uakino(this, object);
             var last;
 
+            // Метод для відображення даних, які поверне балансер
+            function renderItems(items) {
+                console.log("renderItems: Отримано", items.length, "елементів для відображення.");
+
+                // Очищуємо попередні результати
+                scroll.clear();
+
+                items.forEach(element => {
+                    var item = Lampa.Template.get('online_mod', {
+                        title: element.title,
+                        quality: 'HD'
+                    });
+
+                    item.on('hover:enter', () => {
+                        source.getStream(element, (streamUrl) => {
+                            if (streamUrl) {
+                                var playlist = [];
+                                var first = {
+                                    url: streamUrl,
+                                    title: element.title
+                                };
+
+                                playlist.push(first);
+
+                                if (items.length > 1) {
+                                    items.forEach(elem => {
+                                        if (elem !== element) {
+                                            playlist.push({
+                                                title: elem.title,
+                                                url: (call) => {
+                                                    source.getStream(elem, (url) => call(url));
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+
+                                Lampa.Player.play(playlist[0]);
+                                Lampa.Player.playlist(playlist);
+                            }
+                        });
+                    });
+
+                    // Використовуємо локальний 'scroll', а не 'component.append'
+                    item.on('hover:focus', (e) => {
+                        last = e.target;
+                        scroll.update($(e.target), true);
+                    });
+                    scroll.append(item);
+                });
+
+                // Після того, як все додали, вимикаємо завантажувач і показуємо контент
+                this.loading(false);
+                this.start(true);
+            }
+
             this.create = function () {
-                console.log('uakino_component: Метод create() розпочато.');
-                try {
-                    // Повертаємо порожній рендер, щоб Lampa просто створила активність
-                    return this.render();
-                } catch (e) {
-                    console.error("uakino_component: Помилка в методі create():", e);
-                }
-            };
-            this.start = function () {
-                console.log('uakino_component: Метод start() розпочато.');
+                // Передаємо функцію renderItems в балансер, щоб він міг повернути дані
+                source.onResults = renderItems.bind(this);
+                source.onEmpty = this.empty.bind(this);
+                source.onLoading = this.loading.bind(this);
 
-                // Показуємо іконку завантаження
-                this.activity.loader(true);
-
-                // Додаємо область для скролу в наш контейнер
                 files.appendFiles(scroll.render());
+                return this.render();
+            };
 
-                // Налаштовуємо навігацію кнопками
+            this.start = function () {
                 Lampa.Controller.add('content', {
                     toggle: () => {
                         Lampa.Controller.collectionSet(scroll.render(), files.render());
@@ -51,11 +96,11 @@
                 });
                 Lampa.Controller.toggle('content');
 
-                // Запускаємо пошук даних
                 this.search();
             };
+
             this.search = function () {
-                this.activity.loader(true);
+                this.loading(true);
                 this.reset();
                 source.search(object.movie.title, object.movie.original_title);
             };
@@ -111,207 +156,67 @@
         // Логіка балансера для uakino.best
         function uakino(component, _object) {
             var network = new Lampa.Reguest();
-            var object = _object;
-            var HOST = 'https://uakino.best';
-            var SEARCH_API = HOST + '/engine/lazydev/dle_search/ajax.php';
-            // Цей хеш може змінитися в майбутньому, тоді його потрібно буде оновити
-            var DLE_HASH = '8018336ddfb7bab82040aba79ce3188e1d05511c';
 
-            this.destroy = function () {
-                network.clear();
-            };
+            // Ці функції будуть передані з головного компонента
+            this.onResults = function(items) {};
+            this.onEmpty = function(msg) {};
+            this.onLoading = function(bool) {};
 
-            // Крок 1: Пошук фільму на сайті
+            this.destroy = function () { network.clear(); };
+
             this.search = function (title, original_title) {
-                var story = encodeURIComponent(title);
-                var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
-                getPage('kkkk')
-
-                /*network.post(SEARCH_API, post_data, (search_html) => {
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(search_html, "text/html");
-                    var results = doc.querySelectorAll('a.sres-url');
-
-                    if (results.length > 0) {
-                        // Проста логіка вибору найкращого результату
-                        var best_match = null;
-                        var title_lower = title.toLowerCase();
-                        var original_title_lower = original_title.toLowerCase();
-
-                        results.forEach(link => {
-                            var link_title = link.querySelector('.sres-title').textContent.toLowerCase();
-                            var link_original_title = link.querySelector('.sres-original').textContent.toLowerCase();
-                            if(link_title.includes(title_lower) || link_original_title.includes(original_title_lower)) {
-                                if(!best_match) best_match = link.href;
-                            }
-                        });
-
-                        if(best_match){
-                            getPage(best_match);
-                        } else {
-                            // Якщо точного збігу немає, беремо перший результат
-                            getPage(results[0].href);
-                        }
-                    } else {
-                        component.empty(`За запитом '${title}' нічого не знайдено.`);
-                    }
-                }, (a, c) => {
-                    component.empty('Помилка пошуку. ' + network.errorDecode(a,c));
-                });*/
+                // Тепер getPage просто повертає дані через колбек onResults
+                getPage('kkkk');
             };
 
-            // Крок 2: Отримання сторінки фільму/серіалу для пошуку плеєра
             function getPage(movieUrl) {
-                var items = [];
-                var episode_links = [
+                var items = [
                     {
-                        title: 'test 1',
-                        episode: 0,
-                        iframeSrc: 'https://ashdi.vip/video03/3/serials/blue_lock/sinya_vyazniczya__01_76952/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                        title: 'Тестова серія 1',
+                        episode: 1,
+                        iframeSrc: '//ashdi.vip/vod/145231?'
                     },
                     {
-                        title: 'test 2',
-                        episode: 0,
-                        iframeSrc: 'https://ashdi.vip/video05/2/serials/blue_lock/bl2_02online_146444/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                        title: 'Тестова серія 2',
+                        episode: 2,
+                        iframeSrc: '//ashdi.vip/vod/146444?'
                     }
-                ]//doc.querySelectorAll('.serial-series-box > li > a');
+                ];
 
-                if (episode_links.length > 0) { // Це серіал
-                    episode_links.forEach((link, index) => {
-                        items.push({
-                            title: link.title, //link.textContent.trim(),
-                            episode: index + 1,
-                            iframeSrc: link.iframeSrc //link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
-                        });
-                    });
-                }
                 if (items.length > 0) {
-                    append(items);
-                    console.log('search this')
+                    // Повертаємо результат в головний компонент
+                    this.onResults(items);
                 } else {
-                    component.empty('Плеєр не знайдено на сторінці.');
+                    this.onEmpty('Плеєр не знайдено на сторінці.');
                 }
-               /* network.get(movieUrl, (page_html) => {
-                    var items = [];
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(page_html, "text/html");
-
-                    // Перевіряємо, чи це серіал (чи є вибір серій)
-                    var episode_links = [
-                        {
-                            title: 'test 1',
-                            episode: 0,
-                            iframeSrc: 'https://ashdi.vip/video03/3/serials/blue_lock/sinya_vyazniczya__01_76952/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
-                        },
-                        {
-                            title: 'test 2',
-                            episode: 0,
-                            iframeSrc: 'https://ashdi.vip/video05/2/serials/blue_lock/bl2_02online_146444/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
-                        }
-                    ]//doc.querySelectorAll('.serial-series-box > li > a');
-
-                    if (episode_links.length > 0) { // Це серіал
-                        episode_links.forEach((link, index) => {
-                            items.push({
-                                title: link.title, //link.textContent.trim(),
-                                episode: index + 1,
-                                iframeSrc: link.iframeSrc //link.getAttribute('onclick').match(/'([^']+)'/)[1] // Витягуємо URL з onclick
-                            });
-                        });
-                    } /!*else { // Це фільм
-                        var iframe = doc.querySelector('iframe#playerfr');
-                        if (iframe) {
-                            items.push({
-                                title: object.movie.title,
-                                episode: 0, // ознака фільму
-                                iframeSrc: iframe.src
-                            });
-                        }
-                    }*!/
-
-                    if (items.length > 0) {
-                        append(items);
-                    } else {
-                        component.empty('Плеєр не знайдено на сторінці.');
-                    }
-                }, (a, c) => {
-                    component.empty('Не вдалося завантажити сторінку фільму.');
-                });*/
-                console.log('finish get page')
             }
 
-            // Крок 3: Отримання фінального посилання на потік
-            function getStream(element, callback) {
-                // Якщо посилання вже отримано, повертаємо його
-                if (element.stream) return callback();
+            // Перейменовуємо getStream, щоб уникнути плутанини
+            this.getStream = function(element, callback) {
+                if (element.stream) return callback(element.stream);
 
-                // Додаємо протокол, якщо його немає
+                this.onLoading(true);
                 var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
 
                 network.get(iframeUrl, (player_html) => {
                     var parser = new DOMParser();
                     var doc = parser.parseFromString(player_html, "text/html");
                     var video_tag = doc.querySelector('video');
-                    console.log('get stream')
+
+                    this.onLoading(false);
                     if (video_tag && video_tag.src) {
                         element.stream = video_tag.src;
-                        callback();
+                        callback(element.stream);
                     } else {
                         Lampa.Noty.show('Не вдалося отримати посилання на відеопотік.');
-                        component.loading(false);
+                        callback(null);
                     }
                 }, (a, c) => {
-                    Lampa.Noty.show('Помилка завантаження плеєра.');
-                    component.loading(false);
+                    this.onLoading(false);
+                    Lampa.Noty.show('Помилка завантаження плеєра (можливо, CORS).');
+                    callback(null);
                 });
-            }
-
-            // Відображення списку серій/фільму в інтерфейсі Lampa
-            function append(items) {
-                console.log('append cal')
-                component.reset();
-                items.forEach(element => {
-                    var item = Lampa.Template.get('online_mod', {
-                        title: element.title,
-                        quality: 'HD' // Можна залишити статично, бо якість невідома
-                    });
-                    item.on('hover:enter', () => {
-                        element.loading = true;
-                        getStream(element, () => {
-                            element.loading = false;
-
-                            var playlist = [];
-                            var first = {
-                                url: element.stream,
-                                title: element.title
-                            };
-
-                            // Якщо це серіал, створюємо плейлист
-                            if(items.length > 1){
-                                items.forEach(elem => {
-                                    var cell = {
-                                        title: elem.title,
-                                        url: (call) => {
-                                            getStream(elem, () => call(elem.stream));
-                                        }
-                                    };
-                                    if(elem === element) playlist.unshift(cell);
-                                    else playlist.push(cell);
-                                });
-                            } else {
-                                playlist.push(first);
-                            }
-
-                            Lampa.Player.play(first);
-                            Lampa.Player.playlist(playlist);
-                        });
-                    });
-                    console.log('append cal')
-                    component.append(item);
-                });
-                component.loading(false);
-                component.start(true);
-            }
+            };
         }
 
         // Додаємо кнопку "Онлайн" до карток фільмів
