@@ -170,16 +170,18 @@
             this.destroy = function () { network.clear(); };
 
             this.search = function (title, original_title) {
+                console.log('uakino function start')
                 this.getPage('kkkk');
             };
 
             // FIX: Зробив getPage методом екземпляра
             this.getPage = function(movieUrl) {
+                console.log('gar page start')
                 var items = [
                     { title: 'Тестова серія 1', episode: 1, iframeSrc: '//ashdi.vip/vod/145231?' },
                     { title: 'Тестова серія 2', episode: 2, iframeSrc: '//ashdi.vip/vod/146444?' }
                 ];
-
+                console.log('gae page middle')
                 if (items.length > 0) {
                     this.onResults(items);
                 } else {
