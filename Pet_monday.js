@@ -182,11 +182,11 @@
                     { title: 'Тестова серія 2', episode: 2, iframeSrc: '//ashdi.vip/vod/146444?' }
                 ];
                 console.log('gae page middle')
-                // if (items.length > 0) {
-                //     this.onResults(items);
-                // } else {
-                //     this.onEmpty('Плеєр не знайдено на сторінці.');
-                // }
+                if (items.length > 0) {
+                    this.onResults(items);
+                } else {
+                    this.onEmpty('Плеєр не знайдено на сторінці.');
+                }
                 console.log('get page finish')
             }
 
