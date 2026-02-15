@@ -213,6 +213,15 @@
             this.getStream = function(element, callback) {
                 if (element.stream) return callback(element.stream);
 
+                console.log("getStream: Симулюємо отримання посилання. Використовуємо значення з iframeSrc.");
+
+                // Просто беремо значення з iframeSrc і вважаємо його фінальним посиланням
+                element.stream = element.iframeSrc;
+
+                // Викликаємо колбек з результатом
+                callback(element.stream)
+               /* if (element.stream) return callback(element.stream);
+
                 this.onLoading(true);
                 var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
 
@@ -233,7 +242,7 @@
                     this.onLoading(false);
                     Lampa.Noty.show('Помилка завантаження плеєра (можливо, CORS).');
                     callback(null);
-                });
+                });*/
             };
         }
 
