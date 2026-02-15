@@ -179,7 +179,7 @@
         });
 
         // Логіка балансера для uakino.best
-        function uakino(component, _object, network) {
+        /*function uakino(component, _object, network) {
            // var network = new Lampa.Reguest();
 
             this.onResults = function(items) {};
@@ -220,7 +220,7 @@
 
                 // Викликаємо колбек з результатом
                 callback(element.stream)
-               /* if (element.stream) return callback(element.stream);
+               /!* if (element.stream) return callback(element.stream);
 
                 this.onLoading(true);
                 var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
@@ -242,10 +242,118 @@
                     this.onLoading(false);
                     Lampa.Noty.show('Помилка завантаження плеєра (можливо, CORS).');
                     callback(null);
-                });*/
+                });*!/
+            };
+        }*/
+        function uakino(component, _object, network) {
+           // var network = new Lampa.Reguest();
+            var HOST = 'https://uakino.best';
+            var SEARCH_API = HOST + '/engine/lazydev/dle_search/ajax.php';
+            var DLE_HASH = '8018336ddfb7bab82040aba79ce3188e1d05511c';
+
+            this.onResults = function(items) {};
+            this.onEmpty = function(msg) {};
+            this.onLoading = function(bool) {};
+            this.destroy = function () { network.clear(); };
+
+            // --- ТЕПЕР ВИКОРИСТОВУЄМО РЕАЛЬНУ ЛОГІКУ ---
+
+            this.search = function (title, original_title) {
+                var story = encodeURIComponent(title);
+                var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
+
+                // FIX: Додаємо PROXY до URL-адреси
+                network.post(PROXY_URL + SEARCH_API, post_data, (search_html) => {
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(search_html, "text/html");
+                    var results = doc.querySelectorAll('a.sres-url');
+
+                    if (results.length > 0) {
+                        var best_match = null;
+                        var title_lower = title.toLowerCase();
+                        var original_title_lower = original_title ? original_title.toLowerCase() : '';
+
+                        results.forEach(link => {
+                            var link_title = link.querySelector('.sres-title').textContent.toLowerCase();
+                            var link_original_title = link.querySelector('.sres-original').textContent.toLowerCase();
+                            if(link_title.includes(title_lower) || (original_title_lower && link_original_title.includes(original_title_lower))) {
+                                if(!best_match) best_match = link.href;
+                            }
+                        });
+
+                        this.getPage(best_match || results[0].href);
+                    } else {
+                        this.onEmpty(`За запитом '${title}' нічого не знайдено.`);
+                    }
+                }, (a, c) => {
+                    this.onEmpty('Помилка пошуку (CORS). Спробуйте інший проксі.');
+                }, false, {
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+            };
+
+            this.getPage = function(movieUrl) {
+                // FIX: Додаємо PROXY до URL-адреси
+                network.get(PROXY_URL + movieUrl, (page_html) => {
+                    var items = [];
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(page_html, "text/html");
+                    var episode_links = doc.querySelectorAll('.serial-series-box > li > a');
+
+                    if (episode_links.length > 0) {
+                        episode_links.forEach((link, index) => {
+                            var onclickAttr = link.getAttribute('onclick');
+                            if (onclickAttr && onclickAttr.includes('change_series')) {
+                                items.push({
+                                    title: link.textContent.trim(),
+                                    episode: index + 1,
+                                    iframeSrc: onclickAttr.match(/'([^']+)'/)[1]
+                                });
+                            }
+                        });
+                    } else {
+                        var iframe = doc.querySelector('iframe#playerfr');
+                        if (iframe) {
+                            items.push({ title: _object.movie.title, episode: 0, iframeSrc: iframe.src });
+                        }
+                    }
+                    if (items.length > 0) {
+                        this.onResults(items);
+                    } else {
+                        this.onEmpty('Плеєр не знайдено на сторінці.');
+                    }
+                }, (a, c) => {
+                    this.onEmpty('Не вдалося завантажити сторінку фільму (CORS).');
+                });
+            }
+
+            this.getStream = function(element, callback) {
+                if (element.stream) return callback(element.stream);
+
+                this.onLoading(true);
+                var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
+
+                // FIX: Додаємо PROXY до URL-адреси
+                network.get(PROXY_URL + iframeUrl, (player_html) => {
+                    this.onLoading(false);
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(player_html, "text/html");
+                    var video_tag = doc.querySelector('video');
+                    if (video_tag && video_tag.src) {
+                        // FIX: І до фінального посилання теж потрібно додати проксі!
+                        element.stream = PROXY_URL + video_tag.src;
+                        callback(element.stream);
+                    } else {
+                        Lampa.Noty.show('Не вдалося отримати посилання на відеопотік.');
+                        callback(null);
+                    }
+                }, (a, c) => {
+                    this.onLoading(false);
+                    Lampa.Noty.show('Помилка завантаження плеєра (CORS).');
+                    callback(null);
+                });
             };
         }
-
         // Додаємо кнопку "Онлайн" до карток фільмів
         Lampa.Listener.follow('full', function (e) {
             if (e.type == 'complite') {
