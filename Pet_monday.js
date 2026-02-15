@@ -25,7 +25,7 @@
             var network = new Lampa.Reguest();
             var scroll = new Lampa.Scroll({ mask: true, over: true });
             var files = new Lampa.Explorer(object);
-            var source = new uakino(this, object);
+            var source = new uakino(this, object, network);
             var last;
             var started = false; // Прапорець, щоб знати, чи компонент вже стартував
 
@@ -179,8 +179,8 @@
         });
 
         // Логіка балансера для uakino.best
-        function uakino(component, _object) {
-            var network = new Lampa.Reguest();
+        function uakino(component, _object, network) {
+           // var network = new Lampa.Reguest();
 
             this.onResults = function(items) {};
             this.onEmpty = function(msg) {};
@@ -249,7 +249,7 @@
                     console.log('push btn')
                     Lampa.Activity.push({
                         url: '',
-                        title: 'Привіт Руслан',
+                        title: 'Monday plugin',
                         component: 'uakino_component',
                         movie: e.data.movie,
                     });
