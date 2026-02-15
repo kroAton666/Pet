@@ -4,7 +4,7 @@
 
 (function () {
     'use strict';
-
+    var PROXY_URL = 'https://cors.movian.tv/?url=';
     // Функція для запуску плагіна
     function startPlugin() {
         // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
