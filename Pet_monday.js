@@ -197,7 +197,7 @@
             this.getPage = function(movieUrl) {
                 console.log('gar page start')
                 var items = [
-                    { title: 'Тестова серія 1', episode: 1, iframeSrc: 'https://ashdi.vip/vod/146444' },
+                    { title: 'Тестова серія 1', episode: 1, iframeSrc: 'https://ashdi.vip/video15/2/serials/jujutsu_kaisen_s03e01_1080p_amanogawa_227749/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8' },
                     { title: 'Тестова серія 2', episode: 2, iframeSrc: 'https://ashdi.vip/video08/2/serials/blue_lock/bl2_02online_146444/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8' }
                 ];
                 //https://ashdi.vip/vod/146444
