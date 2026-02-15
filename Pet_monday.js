@@ -258,7 +258,7 @@
 
             // --- ТЕПЕР ВИКОРИСТОВУЄМО РЕАЛЬНУ ЛОГІКУ ---
 
-            this.search = function (title, original_title) {
+            /*this.search = function (title, original_title) {
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
 
@@ -289,6 +289,46 @@
                     this.onEmpty('Помилка пошуку (CORS). Спробуйте інший проксі.');
                 }, false, {
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+            };*/
+            // Замініть цей метод у вашій функції uakino
+            this.search = function (title, original_title) {
+                var story = encodeURIComponent(title);
+                var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
+
+                // FIX: Використовуємо 'network.native' замість 'network.post'
+                network.native(PROXY_URL + SEARCH_API, (search_html) => {
+                    // Успішна відповідь
+                    var parser = new DOMParser();
+                    var doc = parser.parseFromString(search_html, "text/html");
+                    var results = doc.querySelectorAll('a.sres-url');
+
+                    if (results.length > 0) {
+                        var best_match = null;
+                        var title_lower = title.toLowerCase();
+                        var original_title_lower = original_title ? original_title.toLowerCase() : '';
+
+                        results.forEach(link => {
+                            var link_title = link.querySelector('.sres-title').textContent.toLowerCase();
+                            var link_original_title = link.querySelector('.sres-original').textContent.toLowerCase();
+                            if(link_title.includes(title_lower) || (original_title_lower && link_original_title.includes(original_title_lower))) {
+                                if(!best_match) best_match = link.href;
+                            }
+                        });
+
+                        this.getPage(best_match || results[0].href);
+                    } else {
+                        this.onEmpty(`За запитом '${title}' нічого не знайдено.`);
+                    }
+                }, (a, c) => {
+                    // Помилка
+                    this.onEmpty('Помилка пошуку (CORS). Спробуйте інший проксі.');
+                }, post_data, { // <-- П'ятий аргумент - це дані для POST-запиту
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    method: 'POST' // <-- Вказуємо метод
                 });
             };
 
