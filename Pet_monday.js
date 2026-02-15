@@ -9,14 +9,14 @@
     function startPlugin() {
         // FIX 1: Реєструємо шаблон на самому початку, гарантуючи його наявність.
         if (!Lampa.Template.get('uakino_mod')) {
-           /* Lampa.Template.add('uakino_mod', `
+            Lampa.Template.add('uakino_mod', `
                 <div class="online selector">
                     <div class="online__body">
                         <div class="online__title" style="padding-left: 1.5em;">{title}</div>
                         <div class="online__quality" style="padding-left: 1.5em;">{quality}</div>
                     </div>
                 </div>
-            `);*/
+            `);
             console.log("РЕЄСТРАЦІЯ ШАБЛОНУ: 'uakino_mod' успішно додано.");
         }
 
@@ -263,12 +263,9 @@
         console.log('plugin is start', Lampa)
     }
 
-    // Запускаємо плагін
-    if (window.appready) startPlugin();
-    else {
-        Lampa.Listener.follow('app', function (e) {
-            if (e.type == 'ready') startPlugin();
-        });
-    }
+
+    Lampa.Listener.follow('app', function (e) {
+        if (e.type == 'ready') startPlugin();
+    });
 
 })();
