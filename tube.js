@@ -651,12 +651,19 @@
                     startSearch(movie);
                 });
 
-                var buttonsContainer = e.render.find('.full-start__buttons');
-                if (buttonsContainer.length) {
-                    buttonsContainer.append(button);
-                    // Force refresh template navigation so Lampa's focus engine registers the new button immediately
-                    if (e.object && e.object.navigation) {
-                        e.object.navigation();
+                var render = e.render;
+                if (!render && e.object && e.object.activity && typeof e.object.activity.render === 'function') {
+                    render = e.object.activity.render();
+                }
+
+                if (render) {
+                    var buttonsContainer = render.find('.full-start__buttons');
+                    if (buttonsContainer.length) {
+                        buttonsContainer.append(button);
+                        // Force refresh template navigation so Lampa's focus engine registers the new button immediately
+                        if (e.object && e.object.navigation) {
+                            e.object.navigation();
+                        }
                     }
                 }
             }
