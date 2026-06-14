@@ -657,13 +657,23 @@
                 }
 
                 if (render) {
-                    var buttonsContainer = render.find('.full-start__buttons');
-                    if (buttonsContainer.length) {
-                        buttonsContainer.append(button);
-                        // Force refresh template navigation so Lampa's focus engine registers the new button immediately
-                        if (e.object && e.object.navigation) {
-                            e.object.navigation();
+                    var torrentBtn = render.find('.view--torrent');
+                    if (torrentBtn.length) {
+                        torrentBtn.after(button);
+                    } else {
+                        var buttonsContainer = render.find('.full-start__buttons');
+                        if (buttonsContainer.length) {
+                            buttonsContainer.append(button);
+                        } else {
+                            var anyButton = render.find('.full-start__button').last();
+                            if (anyButton.length) {
+                                anyButton.after(button);
+                            }
                         }
+                    }
+                    // Force refresh template navigation so Lampa's focus engine registers the new button immediately
+                    if (e.object && e.object.navigation) {
+                        e.object.navigation();
                     }
                 }
             }
