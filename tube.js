@@ -9,14 +9,9 @@
 
     // Helper for requests supporting both direct TV app connections (CORS bypassed) and proxy fallbacks for browser users
     function ajaxRequest(options) {
-        var isBrowser = typeof window.cordova === 'undefined' &&
-            window.location.hostname !== 'localhost' &&
-            window.location.hostname !== '127.0.0.1' &&
-            window.location.hostname !== '';
-
         var url = options.url;
         var proxyIndex = options.proxyIndex !== undefined ? options.proxyIndex : -1;
-        var useProxy = isBrowser || options.forceProxy;
+        var useProxy = options.forceProxy;
 
         if (useProxy) {
             if (proxyIndex === -1) proxyIndex = 0;
@@ -32,7 +27,7 @@
             dataType: options.dataType || 'text',
             success: options.success,
             error: function(xhr, status, err) {
-                // If it fails on a TV without a proxy, retry with proxy
+                // If it fails without a proxy, retry with proxy
                 if (!useProxy) {
                     options.forceProxy = true;
                     options.proxyIndex = 0;
