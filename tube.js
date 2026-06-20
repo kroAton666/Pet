@@ -9,10 +9,10 @@
             window.location.hostname !== '';
 
         var url = options.url;
-        var activeProxy = 'https://cors.kp556.workers.dev/'; // Highly stable community CORS proxy worker
+        var activeProxy = 'https://cors.movian.tv/?url=';
 
         if (isBrowser) {
-            url = activeProxy + url;
+            url = activeProxy + encodeURIComponent(url);
         }
 
         $.ajax({
@@ -26,7 +26,7 @@
                 // If it fails on a TV without a proxy, retry with proxy
                 if (!isBrowser && !options.triedProxy) {
                     options.triedProxy = true;
-                    options.url = activeProxy + options.url;
+                    options.url = activeProxy + encodeURIComponent(options.url);
                     ajaxRequest(options);
                 } else {
                     if (options.error) options.error(xhr, status, err);
