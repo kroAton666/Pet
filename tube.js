@@ -45,47 +45,92 @@
             .trim();
     }
 
-    // Parse HTML search results
+    // Parse HTML search results (supporting both DLE AJAX search popup format and standard search page)
     function parseSearchHtml(html) {
         var cleanHtml = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-        var doc = $(cleanHtml);
+        var doc = $('<div>' + cleanHtml + '</div>');
         var results = [];
 
-        doc.find('article.story').each(function() {
-            var article = $(this);
-            var titleEl = article.find('h2[itemprop="name"] a');
-            if (!titleEl.length) titleEl = article.find('h2 a');
+        var links = doc.find('a');
+        if (links.length > 0) {
+            links.each(function() {
+                var a = $(this);
+                var url = a.attr('href');
+                if (!url) return;
 
-            var title = titleEl.text().trim();
-            var url = titleEl.attr('href');
+                var title = '';
+                var titleEl = a.find('.sres-title, .searchheading, h2, b');
+                if (titleEl.length) {
+                    title = titleEl.first().text().trim();
+                } else {
+                    title = a.text().trim();
+                }
 
-            var posterEl = article.find('span.story_post img');
-            var poster = posterEl.length ? posterEl.attr('src') : '';
-            if (poster && poster.indexOf('http') !== 0) {
-                poster = 'https://anitube.in.ua' + poster;
-            }
+                var poster = '';
+                var img = a.find('img');
+                if (img.length) {
+                    poster = img.attr('src');
+                }
 
-            var descEl = article.find('div.story_c_text');
-            var desc = descEl.length ? descEl.text().trim() : '';
+                var desc = '';
+                var descEl = a.find('.sres-desc, span:not(.searchheading)');
+                if (descEl.length) {
+                    desc = descEl.first().text().trim();
+                }
 
-            var year = '';
-            article.find('div.story_infa dt').each(function() {
-                var label = $(this).text();
-                if (label.indexOf('Рік випуску') !== -1 || label.indexOf('Год') !== -1) {
-                    year = $(this).next('dd').text().trim();
+                if (url && url.indexOf('http') !== 0) {
+                    url = 'https://anitube.in.ua' + url;
+                }
+
+                if (title && url) {
+                    results.push({
+                        title: title,
+                        url: url,
+                        poster: poster,
+                        desc: desc,
+                        year: ''
+                    });
                 }
             });
+        }
 
-            if (title && url) {
-                results.push({
-                    title: title,
-                    url: url,
-                    poster: poster,
-                    desc: desc,
-                    year: year
+        if (results.length === 0) {
+            doc.find('article.story').each(function() {
+                var article = $(this);
+                var titleEl = article.find('h2[itemprop="name"] a');
+                if (!titleEl.length) titleEl = article.find('h2 a');
+
+                var title = titleEl.text().trim();
+                var url = titleEl.attr('href');
+
+                var posterEl = article.find('span.story_post img');
+                var poster = posterEl.length ? posterEl.attr('src') : '';
+                if (poster && poster.indexOf('http') !== 0) {
+                    poster = 'https://anitube.in.ua' + poster;
+                }
+
+                var descEl = article.find('div.story_c_text');
+                var desc = descEl.length ? descEl.text().trim() : '';
+
+                var year = '';
+                article.find('div.story_infa dt').each(function() {
+                    var label = $(this).text();
+                    if (label.indexOf('Рік випуску') !== -1 || label.indexOf('Год') !== -1) {
+                        year = $(this).next('dd').text().trim();
+                    }
                 });
-            }
-        });
+
+                if (title && url) {
+                    results.push({
+                        title: title,
+                        url: url,
+                        poster: poster,
+                        desc: desc,
+                        year: year
+                    });
+                }
+            });
+        }
         return results;
     }
 
@@ -562,15 +607,10 @@
 
     function performSearch(query, callback, error) {
         ajaxRequest({
-            url: 'https://anitube.in.ua/index.php?do=search',
+            url: 'https://anitube.in.ua/engine/ajax/controller.php?mod=search',
             type: 'POST',
             data: {
-                do: 'search',
-                subaction: 'search',
-                search_start: 0,
-                full_search: 0,
-                result_from: 1,
-                story: query
+                q: query
             },
             success: function(html) {
                 try {
