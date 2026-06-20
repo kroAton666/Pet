@@ -1,6 +1,12 @@
 (function () {
     'use strict';
 
+    var activeProxies = [
+        'https://cors557.deno.dev/',
+        'https://cors.fx666.workers.dev/',
+        'https://cors.nb557.workers.dev/'
+    ];
+
     // Helper for requests supporting both direct TV app connections (CORS bypassed) and proxy fallbacks for browser users
     function ajaxRequest(options) {
         var isBrowser = typeof window.cordova === 'undefined' &&
@@ -9,10 +15,13 @@
             window.location.hostname !== '';
 
         var url = options.url;
-        var activeProxy = 'https://cors.movian.tv/?url=';
+        var proxyIndex = options.proxyIndex !== undefined ? options.proxyIndex : -1;
+        var useProxy = isBrowser || options.forceProxy;
 
-        if (isBrowser) {
-            url = activeProxy + encodeURIComponent(url);
+        if (useProxy) {
+            if (proxyIndex === -1) proxyIndex = 0;
+            var proxy = activeProxies[proxyIndex % activeProxies.length];
+            url = proxy + options.url;
         }
 
         $.ajax({
@@ -24,9 +33,13 @@
             success: options.success,
             error: function(xhr, status, err) {
                 // If it fails on a TV without a proxy, retry with proxy
-                if (!isBrowser && !options.triedProxy) {
-                    options.triedProxy = true;
-                    options.url = activeProxy + encodeURIComponent(options.url);
+                if (!useProxy) {
+                    options.forceProxy = true;
+                    options.proxyIndex = 0;
+                    ajaxRequest(options);
+                } else if (proxyIndex + 1 < activeProxies.length) {
+                    // Try the next proxy in the list
+                    options.proxyIndex = proxyIndex + 1;
                     ajaxRequest(options);
                 } else {
                     if (options.error) options.error(xhr, status, err);
