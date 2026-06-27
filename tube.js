@@ -716,7 +716,25 @@
                     '</div>');
 
                 button.on('hover:enter', function () {
-                    startSearch(movie);
+                    var voiceGroups = {
+                        'Тестове озвучення': {
+                            'Сезон 1': [
+                                {
+                                    name: 'Серія 1',
+                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                                },
+                                {
+                                    name: 'Серія 2',
+                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                                },
+                                {
+                                    name: 'Серія 3',
+                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
+                                }
+                            ]
+                        }
+                    };
+                    selectVoiceActing(voiceGroups, movie);
                 });
 
                 var render = e.render;
