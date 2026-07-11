@@ -614,42 +614,28 @@
     }
 
     function performSearch(query, callback, error) {
-        // Step 1: GET homepage to extract session cookies and dle_login_hash token
-        ajaxRequest({
-            url: 'https://anitube.in.ua',
+        $.ajax({
+            url: 'http://192.168.0.4:3000/api/lamp/get-list?searchQuery=' + encodeURIComponent(query),
             type: 'GET',
-            success: function(html) {
-                var tokenMatch = html.match(/var\s+dle_login_hash\s*=\s*['"]([a-f0-9]+)['"]/i);
-                var userHash = tokenMatch ? tokenMatch[1] : null;
-
-                if (!userHash) {
-                    error("Не вдалося знайти dle_login_hash на сторінці.");
-                    return;
+            dataType: 'json',
+            success: function(data) {
+                if (data && data.success && data.results) {
+                    var mappedResults = data.results.map(function(item) {
+                        return {
+                            title: item.title,
+                            url: item.url,
+                            poster: item.poster || '',
+                            desc: '',
+                            year: ''
+                        };
+                    });
+                    callback(mappedResults);
+                } else {
+                    error("Невірний формат відповіді від бекенду.");
                 }
-
-                // Step 2: POST query and user_hash to the search endpoint
-                ajaxRequest({
-                    url: 'https://anitube.in.ua/engine/ajax/controller.php?mod=search',
-                    type: 'POST',
-                    data: {
-                        query: query,
-                        user_hash: userHash
-                    },
-                    success: function(searchHtml) {
-                        try {
-                            var results = parseSearchHtml(searchHtml);
-                            callback(results);
-                        } catch(e) {
-                            error("Помилка парсингу результатів: " + e.message);
-                        }
-                    },
-                    error: function(xhr, status, err) {
-                        error("Помилка виконання пошуку.");
-                    }
-                });
             },
             error: function(xhr, status, err) {
-                error("Не вдалося з'єднатися з AniTube.");
+                error("Помилка запиту до локального бекенду.");
             }
         });
     }
@@ -716,25 +702,7 @@
                     '</div>');
 
                 button.on('hover:enter', function () {
-                    var voiceGroups = {
-                        'Тестове озвучення': {
-                            'Сезон 1': [
-                                {
-                                    name: 'Серія 1',
-                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
-                                },
-                                {
-                                    name: 'Серія 2',
-                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
-                                },
-                                {
-                                    name: 'Серія 3',
-                                    file: 'https://ashdi.vip/video27/2/new/jujutsu_kaisen_s03e01_227417/hls/DK6XiHOKjuRemBH9Ag==/index.m3u8'
-                                }
-                            ]
-                        }
-                    };
-                    selectVoiceActing(voiceGroups, movie);
+                    startSearch(movie);
                 });
 
                 var render = e.render;
