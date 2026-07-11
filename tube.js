@@ -589,26 +589,68 @@
     function loadAnimeDetails(item, movie) {
         Lampa.Loading.start();
 
-        ajaxRequest({
-            url: item.url,
+        var url = 'http://192.168.0.4:3000/api/lamp/play-list?id=' + encodeURIComponent(item.id) + '&pageUrl=' + encodeURIComponent(item.url);
+
+        $.ajax({
+            url: url,
             type: 'GET',
-            success: function(html) {
-                try {
-                    getPlaylist(item.url, html, function(voiceGroups) {
-                        Lampa.Loading.stop();
+            dataType: 'json',
+            success: function(data) {
+                Lampa.Loading.stop();
+                if (data && data.success && data.translations) {
+                    try {
+                        var voiceGroups = {};
+
+                        data.translations.forEach(function(trans) {
+                            var transName = trans.name || 'Озвучення';
+
+                            if (trans.studios) {
+                                trans.studios.forEach(function(studio) {
+                                    var studioName = studio.name || 'Стандартна студія';
+
+                                    if (studio.players) {
+                                        studio.players.forEach(function(player, playerIndex) {
+                                            var playerName = player.name;
+                                            var suffix = '';
+                                            if (!playerName) {
+                                                if (studio.players.length > 1) {
+                                                    suffix = ' (Варіант ' + (playerIndex + 1) + ')';
+                                                }
+                                            } else {
+                                                suffix = ' (' + playerName + ')';
+                                            }
+
+                                            var voiceKey = transName + ' - ' + studioName + suffix;
+
+                                            if (player.episodes && player.episodes.length > 0) {
+                                                if (!voiceGroups[voiceKey]) {
+                                                    voiceGroups[voiceKey] = {};
+                                                }
+                                                var seasonKey = 'Серії';
+                                                voiceGroups[voiceKey][seasonKey] = player.episodes.map(function(ep) {
+                                                    return {
+                                                        name: ep.title,
+                                                        file: ep.file
+                                                    };
+                                                });
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        });
+
                         selectVoiceActing(voiceGroups, movie);
-                    }, function(err) {
-                        Lampa.Loading.stop();
-                        Lampa.Noty.show("Помилка плеєра: " + err);
-                    });
-                } catch(e) {
-                    Lampa.Loading.stop();
-                    Lampa.Noty.show("Помилка обробки сторінки: " + e.message);
+                    } catch(e) {
+                        Lampa.Noty.show("Помилка обробки плейлиста: " + e.message);
+                    }
+                } else {
+                    Lampa.Noty.show("Невірний формат плейлиста від бекенду.");
                 }
             },
-            error: function() {
+            error: function(xhr, status, err) {
                 Lampa.Loading.stop();
-                Lampa.Noty.show("Помилка завантаження сторінки деталей.");
+                Lampa.Noty.show("Помилка завантаження плейлиста з бекенду.");
             }
         });
     }
@@ -622,6 +664,7 @@
                 if (data && data.success && data.results) {
                     var mappedResults = data.results.map(function(item) {
                         return {
+                            id: item.id,
                             title: item.title,
                             url: item.url,
                             poster: item.poster || '',
