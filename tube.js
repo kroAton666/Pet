@@ -409,18 +409,38 @@
             return;
         }
 
-        if (iframeUrl.indexOf('ashdi.vip') !== -1) {
-            resolveAshdi(iframeUrl, callback, error);
-        } else if (iframeUrl.indexOf('csst.online') !== -1 || iframeUrl.indexOf('monstro.site') !== -1 || iframeUrl.indexOf('alllvideo.monster') !== -1) {
-            resolveCsst(iframeUrl, callback, error);
-        } else if (iframeUrl.indexOf('tortuga') !== -1) {
-            resolveTortuga(iframeUrl, callback, error);
-        } else {
-            // General PlayerJS extractor fallback
-            resolveAshdi(iframeUrl, callback, function() {
-                callback(iframeUrl); // Raw iframe fallback
-            });
-        }
+        $.ajax({
+            url: 'http://192.168.0.4:3000/api/lamp/extract-video?url=' + encodeURIComponent(iframeUrl),
+            type: 'GET',
+            success: function(response) {
+                var streamUrl = '';
+                var data = response;
+
+                if (typeof data === 'string') {
+                    var trimmed = data.trim();
+                    if (trimmed.indexOf('{') === 0) {
+                        try {
+                            data = JSON.parse(trimmed);
+                        } catch (e) {}
+                    } else {
+                        streamUrl = trimmed;
+                    }
+                }
+
+                if (typeof data === 'object' && data !== null) {
+                    streamUrl = data.videoUrl || data.url || data.file || data.stream || (data.data && data.data.url);
+                }
+
+                if (streamUrl && (streamUrl.indexOf('http') === 0 || streamUrl.indexOf('//') === 0)) {
+                    callback(streamUrl);
+                } else {
+                    error("Не вдалося отримати посилання на відео з відповіді бекенду.");
+                }
+            },
+            error: function(xhr, status, err) {
+                error("Помилка запиту на екстракцію відео з бекенду.");
+            }
+        });
     }
 
     // Unified interactive UI controller via native Select dialogs
