@@ -410,7 +410,7 @@
         }
 
         $.ajax({
-            url: 'http://192.168.0.2:3000/api/lamp/extract-video?url=' + encodeURIComponent(iframeUrl),
+            url: 'http://192.168.0.6:3000/api/lamp/extract-video?url=' + encodeURIComponent(iframeUrl),
             type: 'GET',
             success: function(response) {
                 var streamUrl = '';
@@ -609,7 +609,7 @@
     function loadAnimeDetails(item, movie) {
         Lampa.Loading.start();
 
-        var url = 'http://192.168.0.2:3000/api/lamp/play-list?id=' + encodeURIComponent(item.id) + '&pageUrl=' + encodeURIComponent(item.url);
+        var url = 'http://192.168.0.6:3000/api/lamp/play-list?id=' + encodeURIComponent(item.id) + '&pageUrl=' + encodeURIComponent(item.url);
 
         $.ajax({
             url: url,
@@ -677,7 +677,7 @@
 
     function performSearch(query, callback, error) {
         $.ajax({
-            url: 'http://192.168.0.2:3000/api/lamp/get-list?searchQuery=' + encodeURIComponent(query),
+            url: 'http://192.168.0.6:3000/api/lamp/get-list?searchQuery=' + encodeURIComponent(query),
             type: 'GET',
             dataType: 'json',
             success: function(data) {
