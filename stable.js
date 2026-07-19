@@ -1,6 +1,6 @@
-// Назва плагіна: AniTube.in.ua (Local Backend Edition with Timeline & Progress)
-// Версія: 1.3.0
-// Опис: Онлайн-перегляд аніме з відображенням смужки перегляду та збереженням прогресу відтворення
+// Назва плагіна: AniTube.in.ua (Local Backend Edition with Timeline & Total Progress)
+// Версія: 1.4.0
+// Опис: Онлайн-перегляд аніме з відображенням загального прогресу серій на головній кнопці запуску
 
 (function () {
     'use strict';
@@ -17,7 +17,7 @@
             .trim();
     }
 
-    // Оновлений шаблон картки з вбудованим контейнером для смужки прогресу (таймлайну)
+    // Шаблон картки серії із збереженням вашого відступу (margin-right: 50px)
     Lampa.Template.add('anitube_mod', `
         <div class="online selector" style="margin-right: 50px;">
             <div class="online__body" style="width: 100%;">
@@ -74,7 +74,7 @@
         this.start = function () {
             started = true;
             if (voiceKeys.length > 0) {
-                // Якщо плейлист вже завантажений, просто перерендеримо його, щоб оновити прогрес-бари та галочки переглядів після виходу з плеєра
+                // Якщо список завантажено, просто перерендеримо для оновлення статусів після виходу з плеєра
                 this.renderEpisodes(currentVoice);
             } else {
                 this.loading(true);
@@ -189,12 +189,14 @@
             var episodes = voiceGroups[voiceKey];
             var viewed = Lampa.Storage.cache('online_view', 5000, []);
 
+            // Записуємо загальну кількість серій цього релізу у статистику
+            var watchedData = Lampa.Storage.get('anitube_progress_' + object.movie.id, { total: 0, watched: [] });
+            watchedData.total = episodes.length;
+            Lampa.Storage.set('anitube_progress_' + object.movie.id, watchedData);
+
             episodes.forEach(function(ep) {
-                // Генерація унікального хешу для відстеження прогресу та статусу перегляду
                 var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
                 var isWatched = viewed.indexOf(hash) !== -1;
-
-                // Запит збереженого таймлайну (прогресу перегляду) з бази Lampa
                 var timeline = Lampa.Timeline.view(hash);
 
                 var item = Lampa.Template.get('anitube_mod', {
@@ -202,7 +204,6 @@
                     quality: isWatched ? '✔ Переглянуто' : 'HD'
                 });
 
-                // Відображення смужки прогресу, якщо серія була запущена раніше
                 if (timeline && timeline.percent > 0) {
                     item.find('.online__timeline').show();
                     item.find('.online__progress').css('width', timeline.percent + '%');
@@ -214,14 +215,13 @@
                         _this.loading(false);
                         if (streamUrl) {
 
-                            // Створення повного плейлиста для плеєра Lampa з динамічним резолвером посилань
                             var playlist = episodes.map(function(e) {
                                 var epHash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + e.name);
                                 var epTimeline = Lampa.Timeline.view(epHash);
 
                                 var playItem = {
                                     title: (object.movie.title || object.movie.name) + ' - ' + voiceKey + ' - ' + e.name,
-                                    timeline: epTimeline, // Передаємо об'єкт таймлайну плеєру для автозбереження прогресу та відновлення місця зупинки
+                                    timeline: epTimeline,
                                     url: function(cb) {
                                         _this.getStreamUrl(e.file, function(resolvedUrl) {
                                             if (resolvedUrl) {
@@ -262,7 +262,7 @@
             this.setFocus();
         };
 
-        // Позначити серію як переглянуту
+        // Позначити серію як переглянуту та записати у статистику загального прогресу картки
         this.markAsWatched = function(ep, voiceKey, itemHtml) {
             var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
             var viewed = Lampa.Storage.cache('online_view', 5000, []);
@@ -272,6 +272,13 @@
                 if (itemHtml) {
                     itemHtml.find('.online__quality').text('✔ Переглянуто');
                 }
+            }
+
+            // Збереження прогресу по серіях для картки опису
+            var watchedData = Lampa.Storage.get('anitube_progress_' + object.movie.id, { total: 0, watched: [] });
+            if (watchedData.watched.indexOf(ep.name) === -1) {
+                watchedData.watched.push(ep.name);
+                Lampa.Storage.set('anitube_progress_' + object.movie.id, watchedData);
             }
         };
 
@@ -380,6 +387,30 @@
             network.clear();
             files.destroy();
             scroll.destroy();
+
+            // Оновлюємо відображення прогресу на картці опису під час виходу з плагіна
+            _this.updateDetailsCardProgress();
+        };
+
+        // Метод оновлення прогрес-бару на кнопці опису фільму
+        this.updateDetailsCardProgress = function() {
+            var btn = $('.anitube-button');
+            if (btn.length) {
+                var watchedData = Lampa.Storage.get('anitube_progress_' + object.movie.id, { total: 0, watched: [] });
+                var total = watchedData.total || (object.movie.number_of_episodes) || 0;
+                var watchedCount = watchedData.watched.length;
+
+                btn.find('.anitube-button-progress').remove();
+                btn.find('.anitube-button-counter').remove();
+
+                if (total > 0 && watchedCount > 0) {
+                    var pct = Math.min(100, Math.round((watchedCount / total) * 100));
+                    btn.append('<div class="anitube-button-progress" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(0,0,0,0.2);">' +
+                        '  <div style="height: 100%; background: #000; width: ' + pct + '%;"></div>' +
+                        '</div>');
+                    btn.append('<span class="anitube-button-counter" style="font-size: 0.7em; opacity: 0.6; margin-top: 2px;">Переглянуто ' + watchedCount + ' з ' + total + '</span>');
+                }
+            }
         };
     });
 
@@ -485,16 +516,16 @@
         });
     }
 
-    // Додавання плагіна та кнопки на сторінку опису
+    // Додавання плагіна та створення кнопки опису з прогресом переглядів
     function initPlugin() {
         if (window.anitube_plugin_initialized) return;
         window.anitube_plugin_initialized = true;
 
         var manifest = {
             type: 'video',
-            version: '1.3.0',
+            version: '1.4.0',
             name: 'AniTube.in.ua',
-            description: 'Український онлайн-перегляд аніме зі збереженням прогресу відтворення',
+            description: 'Український онлайн-перегляд аніме з прогресом та автозбереженням таймлайнів',
             component: 'anitube_view'
         };
         Lampa.Manifest.plugins = manifest;
@@ -503,11 +534,28 @@
             if (e.type === 'complite') {
                 var movie = e.data.movie;
 
-                var button = $('<div class="full-start__button selector view--online anitube-button" style="background: #e49a1d; color: #000; font-weight: bold; border-radius: 4px;">' +
-                    '  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 6px; display: inline-block;">' +
-                    '    <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>' +
-                    '  </svg>' +
-                    '  <span>AniTube</span>' +
+                // Розрахунок прогресу для початкового рендерингу кнопки
+                var watchedData = Lampa.Storage.get('anitube_progress_' + movie.id, { total: 0, watched: [] });
+                var total = watchedData.total || (movie.number_of_episodes) || 0;
+                var watchedCount = watchedData.watched.length;
+
+                var progressHtml = '';
+                if (total > 0 && watchedCount > 0) {
+                    var pct = Math.min(100, Math.round((watchedCount / total) * 100));
+                    progressHtml = '<div class="anitube-button-progress" style="position: absolute; bottom: 0; left: 0; width: 100%; height: 4px; background: rgba(0,0,0,0.2);">' +
+                        '  <div style="height: 100%; background: #000; width: ' + pct + '%;"></div>' +
+                        '</div>' +
+                        '<span class="anitube-button-counter" style="font-size: 0.7em; opacity: 0.6; margin-top: 2px;">Переглянуто ' + watchedCount + ' з ' + total + '</span>';
+                }
+
+                var button = $('<div class="full-start__button selector view--online anitube-button" style="background: #e49a1d; color: #000; font-weight: bold; border-radius: 4px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; height: auto; padding: 6px 12px; min-height: 40px;">' +
+                    '  <div style="display: flex; align-items: center; justify-content: center;">' +
+                    '    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align: middle; margin-right: 6px; display: inline-block;">' +
+                    '      <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM10 16.5V7.5L16 12L10 16.5Z" fill="currentColor"/>' +
+                    '    </svg>' +
+                    '    <span>AniTube</span>' +
+                    '  </div>' +
+                    progressHtml +
                     '</div>');
 
                 button.on('hover:enter', function () {
