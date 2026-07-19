@@ -1,13 +1,13 @@
-// Назва плагіна: AniTube.in.ua (Local Backend Edition with Filter & Autoplay)
-// Версія: 1.2.0
-// Опис: Онлайн-перегляд аніме з відображенням перекладів у доковому меню та автоперемиканням серій
+// Назва плагіна: AniTube.in.ua (Local Backend Edition)
+// Версія: 1.1.0
+// Опис: Онлайн-перегляд аніме з сайту AniTube через локальний бекенд та вбудовані шаблони Lampa
 
 (function () {
     'use strict';
 
     var BACKEND_HOST = 'http://192.168.0.6:3000';
 
-    // Очищення назви для пошуку
+    // Очищення назви для покращення точності пошуку
     function cleanTitle(title) {
         if (!title) return '';
         return title
@@ -17,7 +17,7 @@
             .trim();
     }
 
-    // Реєстрація шаблону Lampa для карток серій
+    // Реєстрація шаблону Lampa для відображення карток елементів (озвучень та серій)
     Lampa.Template.add('anitube_mod', `
         <div class="online selector">
             <div class="online__body">
@@ -27,42 +27,19 @@
         </div>
     `);
 
-    // Створення компонента для виведення контенту
+    // Створення компонента для виведення контенту у списку
     Lampa.Component.add('anitube_component', function(object) {
-        var _this = this;
         var network = new Lampa.Reguest();
         var scroll = new Lampa.Scroll({ mask: true, over: true });
         var files = new Lampa.Explorer(object);
-        var filter = new Lampa.Filter(object);
         var last;
         var started = false;
 
         var voiceGroups = {};
-        var voiceKeys = [];
-        var currentVoice = '';
+        var currentFolder = null; // null — кореневий рівень (вибір студії/озвучення), інакше — конкретна студія
 
         this.create = function () {
-            // Налаштування фільтра
-            filter.onSelect = function(type, a, b) {
-                if (type === 'filter') {
-                    if (a.stype === 'voice') {
-                        currentVoice = voiceKeys[b.index];
-                        _this.renderEpisodes(currentVoice);
-                        _this.updateFilter();
-                        setTimeout(Lampa.Select.close, 10);
-                    }
-                }
-            };
-
-            filter.onBack = function() {
-                _this.setFocus();
-            };
-
-            // Додаємо інтерфейс фільтрації та список до провідника Lampa
             files.appendFiles(scroll.render());
-            files.appendHead(filter.render());
-            scroll.minus(files.render().find('.explorer__files-head'));
-
             return this.render();
         };
 
@@ -72,7 +49,7 @@
             this.loadPlaylist();
         };
 
-        // Завантаження структури серій з бекенду
+        // Завантаження структури серій з локального бекенду
         this.loadPlaylist = function() {
             var url = BACKEND_HOST + '/api/lamp/play-list?id=' + encodeURIComponent(object.item.id) + '&pageUrl=' + encodeURIComponent(object.item.url);
 
@@ -94,12 +71,12 @@
                 },
                 error: () => {
                     this.loading(false);
-                    this.empty("Помилка завантаження плейлиста.");
+                    this.empty("Помилка завантаження плейлиста з бекенду.");
                 }
             });
         };
 
-        // Обробка отриманих від бекенду озвучень
+        // Обробка отриманих від бекенду перекладів та варіантів озвучень
         this.parseData = function(translations) {
             voiceGroups = {};
 
@@ -138,123 +115,107 @@
                 }
             });
 
-            voiceKeys = Object.keys(voiceGroups);
+            var voiceKeys = Object.keys(voiceGroups);
             if (voiceKeys.length === 0) {
                 this.empty("Не знайдено серій.");
                 return;
             }
 
-            // Вибираємо перше доступне озвучення за замовчуванням
-            currentVoice = voiceKeys[0];
-
-            this.updateFilter();
-            this.renderEpisodes(currentVoice);
+            // Якщо доступний лише один варіант озвучення, відображаємо серії одразу
+            if (voiceKeys.length === 1) {
+                this.renderEpisodes(voiceKeys[0]);
+            } else {
+                this.renderFolders();
+            }
         };
 
-        // Оновлення значень у доковому меню фільтра Lampa
-        this.updateFilter = function() {
-            var select = [];
-            var subitems = voiceKeys.map(function(voice, idx) {
-                return {
-                    title: voice,
-                    selected: voice === currentVoice,
-                    index: idx
-                };
-            });
-
-            select.push({
-                title: "Озвучення",
-                subtitle: currentVoice,
-                items: subitems,
-                stype: 'voice'
-            });
-
-            filter.set('filter', select);
-            filter.chosen('filter', ["Озвучення: " + currentVoice]);
-        };
-
-        // Відображення серій для обраного перекладу
-        this.renderEpisodes = function(voiceKey) {
+        // Рендеринг папок з озвученнями
+        this.renderFolders = function() {
+            currentFolder = null;
             scroll.clear();
 
-            var episodes = voiceGroups[voiceKey];
-            var viewed = Lampa.Storage.cache('online_view', 5000, []);
-
-            episodes.forEach(function(ep) {
-                // Генерація унікального хешу для відстеження перегляду серії
-                var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
-                var isWatched = viewed.indexOf(hash) !== -1;
-
+            var keys = Object.keys(voiceGroups);
+            keys.forEach((key) => {
                 var item = Lampa.Template.get('anitube_mod', {
-                    title: ep.name,
-                    quality: isWatched ? '✔ Переглянуто' : 'HD'
+                    title: key,
+                    quality: 'Папка'
                 });
 
-                item.on('hover:enter', function() {
-                    _this.loading(true);
-                    _this.getStreamUrl(ep.file, function(streamUrl) {
-                        _this.loading(false);
-                        if (streamUrl) {
-
-                            // Створення повного плейлиста для плеєра Lampa з динамічним резолвером посилань
-                            var playlist = episodes.map(function(e) {
-                                var playItem = {
-                                    title: (object.movie.title || object.movie.name) + ' - ' + voiceKey + ' - ' + e.name,
-                                    url: function(cb) {
-                                        _this.getStreamUrl(e.file, function(resolvedUrl) {
-                                            if (resolvedUrl) {
-                                                playItem.url = resolvedUrl; // Оновлюємо посилання, щоб не резолвити двічі
-                                                cb({
-                                                    url: resolvedUrl,
-                                                    title: playItem.title
-                                                });
-                                            } else {
-                                                cb({ url: '' });
-                                                Lampa.Noty.show("Не вдалося отримати посилання для наступної серії.");
-                                            }
-                                        });
-                                    },
-                                    callback: function() {
-                                        _this.markAsWatched(e, voiceKey, item);
-                                    }
-                                };
-                                return playItem;
-                            });
-
-                            var epIndex = episodes.indexOf(ep);
-                            var firstPlayItem = playlist[epIndex];
-
-                            // Для першої серії записуємо вже отриманий URL безпосередньо
-                            firstPlayItem.url = streamUrl;
-
-                            Lampa.Player.play(firstPlayItem);
-                            Lampa.Player.playlist(playlist);
-                        } else {
-                            Lampa.Noty.show("Не вдалося отримати відеопотік.");
-                        }
-                    });
+                item.on('hover:enter', () => {
+                    this.renderEpisodes(key);
                 });
 
-                _this.append(item);
+                this.append(item);
             });
 
             this.setFocus();
         };
 
-        // Позначити серію як переглянуту
-        this.markAsWatched = function(ep, voiceKey, itemHtml) {
-            var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
-            var viewed = Lampa.Storage.cache('online_view', 5000, []);
-            if (viewed.indexOf(hash) === -1) {
-                viewed.push(hash);
-                Lampa.Storage.set('online_view', viewed);
-                if (itemHtml) {
-                    itemHtml.find('.online__quality').text('✔ Переглянуто');
-                }
+        // Рендеринг серій всередині обраного озвучення
+        this.renderEpisodes = function(voiceKey) {
+            currentFolder = voiceKey;
+            scroll.clear();
+
+            // Кнопка повернення до озвучень, якщо їх більше ніж одне
+            if (Object.keys(voiceGroups).length > 1) {
+                var backItem = Lampa.Template.get('anitube_mod', {
+                    title: '⬅ Назад до вибору озвучення',
+                    quality: ''
+                });
+                backItem.on('hover:enter', () => {
+                    this.renderFolders();
+                });
+                this.append(backItem);
             }
+
+            var episodes = voiceGroups[voiceKey];
+            episodes.forEach((ep) => {
+                var item = Lampa.Template.get('anitube_mod', {
+                    title: ep.name,
+                    quality: 'HD'
+                });
+
+                item.on('hover:enter', () => {
+                    this.loading(true);
+                    this.getStreamUrl(ep.file, (streamUrl) => {
+                        this.loading(false);
+                        if (streamUrl) {
+                            // Формування плейлиста з лінивим розширенням посилань для автопереходу
+                            var playlist = episodes.map((e) => {
+                                return {
+                                    title: (object.movie.title || object.movie.name) + ' - ' + voiceKey + ' - ' + e.name,
+                                    url: (call) => {
+                                        this.getStreamUrl(e.file, (url) => call(url));
+                                    }
+                                };
+                            });
+
+                            var epIndex = episodes.indexOf(ep);
+                            var firstPlayItem = {
+                                title: (object.movie.title || object.movie.name) + ' - ' + voiceKey + ' - ' + ep.name,
+                                url: streamUrl
+                            };
+
+                            var lampaPlaylist = playlist.map((p, idx) => {
+                                if (idx === epIndex) return firstPlayItem;
+                                return p;
+                            });
+
+                            Lampa.Player.play(firstPlayItem);
+                            Lampa.Player.playlist(lampaPlaylist);
+                        } else {
+                            Lampa.Noty.show("Помилка: не вдалося отримати посилання на відеопотік.");
+                        }
+                    });
+                });
+
+                this.append(item);
+            });
+
+            this.setFocus();
         };
 
-        // Запит до вашого локального бекенду для отримання посилання на відео
+        // Запит до бекенду для отримання прямого посилання на відео
         this.getStreamUrl = function(iframeUrl, callback) {
             if (!iframeUrl) {
                 callback(null);
@@ -315,20 +276,19 @@
                 down: () => {
                     Navigator.move('down');
                 },
-                right: () => {
-                    // Якщо користувач натискає "Вправо" на пульті — плавно виїжджає докове меню фільтрації
-                    if (Navigator.canmove('right')) Navigator.move('right');
-                    else filter.show('Озвучення', 'filter');
-                },
-                left: () => {
-                    if (Navigator.canmove('left')) Navigator.move('left');
-                    else Lampa.Controller.toggle('menu');
-                },
                 back: () => {
-                    Lampa.Activity.backward();
+                    this.back();
                 }
             });
             Lampa.Controller.toggle('content');
+        };
+
+        this.back = function() {
+            if (currentFolder !== null && Object.keys(voiceGroups).length > 1) {
+                this.renderFolders();
+            } else {
+                Lampa.Activity.backward();
+            }
         };
 
         this.empty = function(msg) {
@@ -363,7 +323,7 @@
         };
     });
 
-    // Відкриття компонента після пошуку
+    // Відкриття створеного нативного компонента
     function openComponent(item, movie) {
         Lampa.Activity.push({
             url: '',
@@ -374,7 +334,7 @@
         });
     }
 
-    // Відображення результатів пошуку
+    // Показує результати пошуку для вибору потрібної картки
     function showSearchResults(results, movie) {
         if (results.length === 1) {
             openComponent(results[0], movie);
@@ -402,7 +362,7 @@
         });
     }
 
-    // Запит пошуку до локального бекенду
+    // Пошуковий запит до локального бекенду
     function performSearch(query, callback, error) {
         $.ajax({
             url: BACKEND_HOST + '/api/lamp/get-list?searchQuery=' + encodeURIComponent(query),
@@ -465,16 +425,16 @@
         });
     }
 
-    // Додавання плагіна та кнопки на сторінку опису
+    // Ініціалізація та додавання кнопки "AniTube" на сторінку опису фільму
     function initPlugin() {
         if (window.anitube_plugin_initialized) return;
         window.anitube_plugin_initialized = true;
 
         var manifest = {
             type: 'video',
-            version: '1.2.0',
+            version: '1.1.0',
             name: 'AniTube.in.ua',
-            description: 'Український онлайн-перегляд аніме з використанням докового меню перекладів',
+            description: 'Український онлайн-перегляд аніме через локальний бекенд',
             component: 'anitube_view'
         };
         Lampa.Manifest.plugins = manifest;
