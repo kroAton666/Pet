@@ -179,7 +179,7 @@
         });
 
         // Логіка балансера для uakino.best
-        /*function uakino(component, _object, network) {
+        function uakino(component, _object, network) {
            // var network = new Lampa.Reguest();
 
             this.onResults = function(items) {};
@@ -220,7 +220,7 @@
 
                 // Викликаємо колбек з результатом
                 callback(element.stream)
-               /!* if (element.stream) return callback(element.stream);
+               /* if (element.stream) return callback(element.stream);
 
                 this.onLoading(true);
                 var iframeUrl = element.iframeSrc.startsWith('//') ? 'https:' + element.iframeSrc : element.iframeSrc;
@@ -242,10 +242,11 @@
                     this.onLoading(false);
                     Lampa.Noty.show('Помилка завантаження плеєра (можливо, CORS).');
                     callback(null);
-                });*!/
+                });*/
             };
-        }*/
-        function uakino(component, _object, network) {
+        }
+        //UAKINO OLD
+        /*function uakino(component, _object, network) {
            // var network = new Lampa.Reguest();
             var HOST = 'https://uakino.best';
             var SEARCH_API = HOST + '/engine/lazydev/dle_search/ajax.php';
@@ -258,7 +259,7 @@
 
             // --- ТЕПЕР ВИКОРИСТОВУЄМО РЕАЛЬНУ ЛОГІКУ ---
 
-            /*this.search = function (title, original_title) {
+            /!*this.search = function (title, original_title) {
                 var story = encodeURIComponent(title);
                 var post_data = `story=${story}&dle_hash=${DLE_HASH}&thisUrl=/`;
 
@@ -290,7 +291,7 @@
                 }, false, {
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8', 'X-Requested-With': 'XMLHttpRequest' }
                 });
-            };*/
+            };*!/
             // Замініть цей метод у вашій функції uakino
             this.search = function (title, original_title) {
                 var story = encodeURIComponent(title);
@@ -393,7 +394,7 @@
                     callback(null);
                 });
             };
-        }
+        }*/
         // Додаємо кнопку "Онлайн" до карток фільмів
         Lampa.Listener.follow('full', function (e) {
             if (e.type == 'complite') {
