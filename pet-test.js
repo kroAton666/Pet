@@ -19,7 +19,7 @@
 
     // Оновлений шаблон картки з вбудованим контейнером для смужки прогресу (таймлайну)
     Lampa.Template.add('anitube_mod', `
-        <div class="online selector">
+        <div class="online selector" style="margin-right: 50px;">
             <div class="online__body" style="width: 100%;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="online__title" style="padding-left: 1.5em; font-size: 1.2em;">{title}</div>

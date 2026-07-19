@@ -1,6 +1,6 @@
-// Назва плагіна: AniTube.in.ua (Local Backend Edition with Filter & Autoplay)
-// Версія: 1.2.0
-// Опис: Онлайн-перегляд аніме з відображенням перекладів у доковому меню та автоперемиканням серій
+// Назва плагіна: AniTube.in.ua (Local Backend Edition with Timeline & Progress)
+// Версія: 1.3.0
+// Опис: Онлайн-перегляд аніме з відображенням смужки перегляду та збереженням прогресу відтворення
 
 (function () {
     'use strict';
@@ -17,12 +17,17 @@
             .trim();
     }
 
-    // Реєстрація шаблону Lampa для карток серій
+    // Оновлений шаблон картки з вбудованим контейнером для смужки прогресу (таймлайну)
     Lampa.Template.add('anitube_mod', `
-        <div class="online selector">
-            <div class="online__body">
-                <div class="online__title" style="padding-left: 1.5em;">{title}</div>
-                <div class="online__quality" style="padding-left: 1.5em;">{quality}</div>
+        <div class="online selector" style="margin-right: 50px;">
+            <div class="online__body" style="width: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="online__title" style="padding-left: 1.5em; font-size: 1.2em;">{title}</div>
+                    <div class="online__quality" style="padding-left: 1.5em; padding-right: 1.5em; font-size: 1.1em; font-weight: bold; color: #e49a1d;">{quality}</div>
+                </div>
+                <div class="online__timeline" style="margin: 0.6em 1.5em 0.2em 1.5em; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; display: none;">
+                    <div class="online__progress" style="height: 100%; background: #e49a1d; width: 0%;"></div>
+                </div>
             </div>
         </div>
     `);
@@ -42,7 +47,7 @@
         var currentVoice = '';
 
         this.create = function () {
-            // Налаштування фільтра
+            // Налаштування фільтра перекладів
             filter.onSelect = function(type, a, b) {
                 if (type === 'filter') {
                     if (a.stype === 'voice') {
@@ -68,8 +73,13 @@
 
         this.start = function () {
             started = true;
-            this.loading(true);
-            this.loadPlaylist();
+            if (voiceKeys.length > 0) {
+                // Якщо плейлист вже завантажений, просто перерендеримо його, щоб оновити прогрес-бари та галочки переглядів після виходу з плеєра
+                this.renderEpisodes(currentVoice);
+            } else {
+                this.loading(true);
+                this.loadPlaylist();
+            }
         };
 
         // Завантаження структури серій з бекенду
@@ -144,7 +154,6 @@
                 return;
             }
 
-            // Вибираємо перше доступне озвучення за замовчуванням
             currentVoice = voiceKeys[0];
 
             this.updateFilter();
@@ -181,14 +190,23 @@
             var viewed = Lampa.Storage.cache('online_view', 5000, []);
 
             episodes.forEach(function(ep) {
-                // Генерація унікального хешу для відстеження перегляду серії
+                // Генерація унікального хешу для відстеження прогресу та статусу перегляду
                 var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
                 var isWatched = viewed.indexOf(hash) !== -1;
+
+                // Запит збереженого таймлайну (прогресу перегляду) з бази Lampa
+                var timeline = Lampa.Timeline.view(hash);
 
                 var item = Lampa.Template.get('anitube_mod', {
                     title: ep.name,
                     quality: isWatched ? '✔ Переглянуто' : 'HD'
                 });
+
+                // Відображення смужки прогресу, якщо серія була запущена раніше
+                if (timeline && timeline.percent > 0) {
+                    item.find('.online__timeline').show();
+                    item.find('.online__progress').css('width', timeline.percent + '%');
+                }
 
                 item.on('hover:enter', function() {
                     _this.loading(true);
@@ -198,12 +216,16 @@
 
                             // Створення повного плейлиста для плеєра Lampa з динамічним резолвером посилань
                             var playlist = episodes.map(function(e) {
+                                var epHash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + e.name);
+                                var epTimeline = Lampa.Timeline.view(epHash);
+
                                 var playItem = {
                                     title: (object.movie.title || object.movie.name) + ' - ' + voiceKey + ' - ' + e.name,
+                                    timeline: epTimeline, // Передаємо об'єкт таймлайну плеєру для автозбереження прогресу та відновлення місця зупинки
                                     url: function(cb) {
                                         _this.getStreamUrl(e.file, function(resolvedUrl) {
                                             if (resolvedUrl) {
-                                                playItem.url = resolvedUrl; // Оновлюємо посилання, щоб не резолвити двічі
+                                                playItem.url = resolvedUrl;
                                                 cb({
                                                     url: resolvedUrl,
                                                     title: playItem.title
@@ -224,7 +246,6 @@
                             var epIndex = episodes.indexOf(ep);
                             var firstPlayItem = playlist[epIndex];
 
-                            // Для першої серії записуємо вже отриманий URL безпосередньо
                             firstPlayItem.url = streamUrl;
 
                             Lampa.Player.play(firstPlayItem);
@@ -254,7 +275,7 @@
             }
         };
 
-        // Запит до вашого локального бекенду для отримання посилання на відео
+        // Запит до локального бекенду для отримання посилання на відео
         this.getStreamUrl = function(iframeUrl, callback) {
             if (!iframeUrl) {
                 callback(null);
@@ -316,7 +337,6 @@
                     Navigator.move('down');
                 },
                 right: () => {
-                    // Якщо користувач натискає "Вправо" на пульті — плавно виїжджає докове меню фільтрації
                     if (Navigator.canmove('right')) Navigator.move('right');
                     else filter.show('Озвучення', 'filter');
                 },
@@ -472,9 +492,9 @@
 
         var manifest = {
             type: 'video',
-            version: '1.2.0',
+            version: '1.3.0',
             name: 'AniTube.in.ua',
-            description: 'Український онлайн-перегляд аніме з використанням докового меню перекладів',
+            description: 'Український онлайн-перегляд аніме зі збереженням прогресу відтворення',
             component: 'anitube_view'
         };
         Lampa.Manifest.plugins = manifest;
