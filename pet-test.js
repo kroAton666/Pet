@@ -1,7 +1,7 @@
 // Назва плагіна: AniTube.in.ua (Local Backend Edition with Timeline & Total Progress)
 // Версія: 1.4.0
 // Опис: Онлайн-перегляд аніме з відображенням загального прогресу серій на головній кнопці запуску
-
+//test push to check update
 (function () {
     'use strict';
 
