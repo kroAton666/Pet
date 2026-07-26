@@ -1,7 +1,7 @@
 // Назва плагіна: uakino.in.ua (Local Backend Edition with Timeline & Total Progress)
-// Версія: 1.4.0
+// Версія: 1.0.0
 // Опис: Онлайн-перегляд аніме з відображенням загального прогресу серій на головній кнопці запуску
-//test push to check update
+
 (function () {
     'use strict';
 
@@ -456,7 +456,7 @@
     // Запит пошуку до локального бекенду
     function performSearch(query, callback, error) {
         $.ajax({
-            url: BACKEND_HOST + '/api/lamp/get-list?searchQuery=' + encodeURIComponent(query),
+            url: BACKEND_HOST + '/api/lamp/uakino/get-search-results?searchQuery=' + encodeURIComponent(query),
             type: 'GET',
             dataType: 'json',
             success: function(data) {
