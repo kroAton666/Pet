@@ -84,7 +84,7 @@
 
         // Завантаження структури серій з бекенду
         this.loadPlaylist = function() {
-            var url = BACKEND_HOST + '/api/lamp/play-list?id=' + encodeURIComponent(object.item.id) + '&pageUrl=' + encodeURIComponent(object.item.url);
+            var url = BACKEND_HOST + '/api/lamp/uakino/play-list?id=' + encodeURIComponent(object.item.id) + '&pageUrl=' + encodeURIComponent(object.item.url);
 
             $.ajax({
                 url: url,
