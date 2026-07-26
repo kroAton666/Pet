@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    var BACKEND_HOST = "http://192.168.0.3:3000"//'http://192.168.0.6:3000';
+    var BACKEND_HOST = 'http://192.168.0.6:3000';
 
     // Очищення назви для пошуку
     function cleanTitle(title) {
