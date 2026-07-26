@@ -1,5 +1,5 @@
 // Назва плагіна: uakino.in.ua (Local Backend Edition with Timeline & Total Progress)
-// Версія: 1.1.0
+// Версія: 1.2.0
 // Опис: Онлайн-перегляд аніме з відображенням загального прогресу серій на головній кнопці запуску
 
 (function () {
@@ -116,34 +116,13 @@
             translations.forEach(function(trans) {
                 var transName = trans.name || 'Озвучення';
 
-                if (trans.studios) {
-                    trans.studios.forEach(function(studio) {
-                        var studioName = studio.name || 'Стандартна студія';
-
-                        if (studio.players) {
-                            studio.players.forEach(function(player, playerIndex) {
-                                var playerName = player.name;
-                                var suffix = '';
-                                if (!playerName) {
-                                    if (studio.players.length > 1) {
-                                        suffix = ' (Варіант ' + (playerIndex + 1) + ')';
-                                    }
-                                } else {
-                                    suffix = ' (' + playerName + ')';
-                                }
-
-                                var voiceKey = transName + ' - ' + studioName + suffix;
-
-                                if (player.episodes && player.episodes.length > 0) {
-                                    voiceGroups[voiceKey] = player.episodes.map(function(ep) {
-                                        return {
-                                            name: ep.title,
-                                            file: ep.file
-                                        };
-                                    });
-                                }
-                            });
-                        }
+                // Якщо переклад містить серії, одразу додаємо їх
+                if (trans.episodes && trans.episodes.length > 0) {
+                    voiceGroups[transName] = trans.episodes.map(function(ep) {
+                        return {
+                            name: ep.title,
+                            file: ep.file
+                        };
                     });
                 }
             });
