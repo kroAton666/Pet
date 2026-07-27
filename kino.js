@@ -1,5 +1,5 @@
 // Назва плагіна: uakino.in.ua (Local Backend Edition with Timeline & Total Progress)
-// Версія: 1.3.0
+// Версія: 1.4.0
 // Опис: Онлайн-перегляд аніме з відображенням загального прогресу серій на головній кнопці запуску
 
 (function () {
@@ -464,7 +464,7 @@
     function startSearch(movie) {
         Lampa.Loading.start();
 
-        var query = cleanTitle(movie.original_title || movie.original_name);
+        var query = cleanTitle(movie.title || movie.name);
 
         performSearch(query, function(results) {
             Lampa.Loading.stop();
