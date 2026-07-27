@@ -452,7 +452,7 @@
                     });
                     callback(mappedResults);
                 } else {
-                    error("Невірний формат відповіді від бекенду.");
+                    error("Невірний формат відповіді від бекенду при кошуку.");
                 }
             },
             error: function(xhr, status, err) {
