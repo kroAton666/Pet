@@ -464,7 +464,7 @@
     function startSearch(movie) {
         Lampa.Loading.start();
 
-        var query = cleanTitle(movie.title || movie.name);
+        var query = cleanTitle(movie.original_title || movie.original_name);
 
         performSearch(query, function(results) {
             Lampa.Loading.stop();
