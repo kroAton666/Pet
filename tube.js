@@ -1,6 +1,6 @@
-// Назва плагіна: AniTube.in.ua (Local Backend Edition with Seasons & Cache)
-// Версія: 1.6.0
-// Опис: Онлайн-перегляд аніме з підтримкою сезонів у доковому меню та кешуванням на час відкриття картки
+// Назва плагіна: AniTube.in.ua (Local Backend Edition with State Restore)
+// Версія: 1.7.0
+// Опис: Онлайн-перегляд аніме з відновленням останнього переглянутого сезону та перекладу
 
 (function () {
     'use strict';
@@ -84,7 +84,24 @@
         this.start = function () {
             started = true;
             if (seasonsList.length > 0 && !currentVoice) {
-                currentSeasonIndex = _this.findMatchingSeasonIndex();
+                // Спробуємо відновити останній збережений сезон
+                var savedChoice = Lampa.Storage.get('anitube_last_choice_' + object.movie.id, null);
+                if (savedChoice && savedChoice.seasonUrl) {
+                    var foundIdx = -1;
+                    for (var i = 0; i < seasonsList.length; i++) {
+                        if (seasonsList[i].url === savedChoice.seasonUrl) {
+                            foundIdx = i;
+                            break;
+                        }
+                    }
+                    if (foundIdx !== -1) {
+                        currentSeasonIndex = foundIdx;
+                    } else {
+                        currentSeasonIndex = _this.findMatchingSeasonIndex();
+                    }
+                } else {
+                    currentSeasonIndex = _this.findMatchingSeasonIndex();
+                }
             }
 
             if (voiceKeys.length > 0) {
@@ -92,6 +109,18 @@
                 this.renderEpisodes(currentVoice);
             } else {
                 this.loadPlaylist();
+            }
+        };
+
+        // Запис поточного вибору сезону та перекладу до бази Lampa
+        this.saveLastChoice = function() {
+            var activeSeason = seasonsList[currentSeasonIndex];
+            if (activeSeason) {
+                var choice = {
+                    seasonUrl: activeSeason.url,
+                    voice: currentVoice
+                };
+                Lampa.Storage.set('anitube_last_choice_' + object.movie.id, choice);
             }
         };
 
@@ -111,7 +140,7 @@
             return 0; // Якщо збігів немає, повертаємо перший
         };
 
-        // Завантаження структури серій з використанням локального кешування
+        // Завантаження структури серій з використанням локального кешування та відновленням вибору
         this.loadPlaylist = function() {
             var activeSeason = seasonsList[currentSeasonIndex];
             if (!activeSeason) {
@@ -124,7 +153,14 @@
                 var cached = playlistCache[activeSeason.url];
                 voiceGroups = cached.voiceGroups;
                 voiceKeys = cached.voiceKeys;
-                currentVoice = voiceKeys[0];
+
+                // Спробуємо відновити останнє збережене озвучення для цього сезону
+                var savedChoice = Lampa.Storage.get('anitube_last_choice_' + object.movie.id, null);
+                if (savedChoice && savedChoice.voice && voiceKeys.indexOf(savedChoice.voice) !== -1) {
+                    currentVoice = savedChoice.voice;
+                } else {
+                    currentVoice = voiceKeys[0];
+                }
 
                 this.updateFilter();
                 this.renderEpisodes(currentVoice);
@@ -210,7 +246,14 @@
 
             voiceGroups = tempVoiceGroups;
             voiceKeys = tempVoiceKeys;
-            currentVoice = voiceKeys[0];
+
+            // Спробуємо відновити останнє збережене озвучення при завантаженні нових даних
+            var savedChoice = Lampa.Storage.get('anitube_last_choice_' + object.movie.id, null);
+            if (savedChoice && savedChoice.voice && voiceKeys.indexOf(savedChoice.voice) !== -1) {
+                currentVoice = savedChoice.voice;
+            } else {
+                currentVoice = voiceKeys[0];
+            }
 
             this.updateFilter();
             this.renderEpisodes(currentVoice);
@@ -273,6 +316,9 @@
             var watchedData = Lampa.Storage.get('anitube_progress_' + object.movie.id, { total: 0, watched: [] });
             watchedData.total = episodes.length;
             Lampa.Storage.set('anitube_progress_' + object.movie.id, watchedData);
+
+            // Зберігаємо поточний вибір до бази Lampa
+            _this.saveLastChoice();
 
             episodes.forEach(function(ep) {
                 var hash = Lampa.Utils.hash((object.movie.title || object.movie.name) + voiceKey + ep.name);
@@ -675,9 +721,9 @@
 
         var manifest = {
             type: 'video',
-            version: '1.6.0',
+            version: '1.7.0',
             name: 'AniTube.in.ua',
-            description: 'Український онлайн-перегляд аніме з вибором сезонів у док-меню та кешуванням',
+            description: 'Український онлайн-перегляд аніме з відновленням останньої сесії перегляду',
             component: 'anitube_view'
         };
         Lampa.Manifest.plugins = manifest;
